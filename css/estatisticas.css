@@ -1,0 +1,109 @@
+/* Estatísticas */
+.heatmap-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.heatmap-cell:hover {
+  transform: scale(1.3);
+  z-index: 2;
+}
+#insights-list li {
+  background: var(--bg-secondary);
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+/* Limita a altura dos gráficos */
+.card canvas {
+  max-height: 300px !important;
+  width: 100% !important;
+}
+/* Calendário */
+.calendario-dia {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+.calendario-dia:hover {
+  background-color: var(--primary-light);
+}
+/* Força 7 colunas para o calendário */
+.row-cols-7 > * {
+  flex: 0 0 auto;
+  width: calc(100% / 7);
+}
+
+/* Célula do dia */
+.calendario-dia {
+  aspect-ratio: auto;               /* remove a proporção quadrada */
+  min-height: 80px;                 /* altura mínima confortável */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;      /* conteúdo começa no topo */
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 4px 2px;
+  transition: background-color 0.2s;
+  overflow: hidden;
+}
+
+/* Dia com leitura */
+.calendario-dia.com-leitura {
+  background-color: var(--primary-light);
+}
+
+/* Capa do livro – contida e centralizada */
+.calendario-dia img {
+  width: 100%;
+  max-height: 55px;                 /* altura máxima da imagem */
+  object-fit: contain;             /* 👈 mostra a capa inteira, sem cortar */
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* Ajuste opcional: ícone de livro quando não há capa */
+.calendario-dia i {
+  font-size: 1.2rem;
+  margin-top: 4px;
+}
+
+.local-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1rem;
+  height: 100%;
+}
+.local-card i {
+  color: var(--primary);
+}
+.icone-capa-marcador {
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.avatar-marcador-local div {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: var(--font-family);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.leaflet-popup-content i {
+  color: var(--primary);
+  width: 1.1em;
+  text-align: center;
+}

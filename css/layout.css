@@ -1,0 +1,253 @@
+/* Layout principal */
+html, body {
+  height: 100%;
+  margin: 0;
+  /* Safe area para iPhones com notch */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Splash screen */
+#splash-screen {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg-primary);
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+body.app-loaded #splash-screen {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Área de conteúdo principal */
+.content-area {
+  margin-left: 0;
+  padding-bottom: 70px;
+  min-height: 100vh;
+}
+@media (min-width: 768px) {
+  .content-area {
+    margin-left: 250px;
+    padding-bottom: 0;
+  }
+}
+
+/* ========================================= */
+/* Sidebar Ajustada (Correção de Rolagem)    */
+/* ========================================= */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 250px;
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  z-index: 1000;
+  /* Retiramos o overflow daqui para não rolar a logo/rodapé */
+}
+
+/* Faz apenas a lista de links da sidebar rolar se a tela for pequena */
+.sidebar nav {
+  flex: 1;
+  overflow-y: auto;
+  flex-wrap: nowrap;
+}
+
+.sidebar .nav-link {
+  color: var(--text-secondary);
+  padding: 10px 15px;
+  border-radius: var(--radius);
+  margin-bottom: 2px;
+}
+
+/* Afasta um pouco o último link (Configurações) para não grudar no botão de tema */
+.sidebar nav .nav-link:last-child {
+  margin-bottom: 15px;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background-color: var(--primary);
+  color: #fff;
+}
+/* ========================================= */
+
+
+/* Navegação inferior mobile – efeito vidro melhorado */
+.bottom-nav {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+body.dark-mode .bottom-nav {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.bottom-nav .nav-item {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.bottom-nav .nav-item.active {
+  color: var(--primary);
+}
+
+/* Páginas com transição suave (slide horizontal) */
+.page {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.page.active {
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Cards padrão */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Garante que a barra inferior não quebre layout e permita scroll se necessário */
+.bottom-nav .container {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.bottom-nav .nav-item {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  padding: 0.25rem 0.3rem;
+  min-width: 44px;
+}
+.bottom-nav .nav-item i {
+  font-size: 1rem;
+}
+
+/* Opcional: esconde o texto em telas muito pequenas (menos de 360px) */
+@media (max-width: 360px) {
+  .bottom-nav .nav-item small {
+    display: none !important;
+  }
+  .bottom-nav .nav-item i {
+    font-size: 1.2rem;
+  }
+}
+
+/* Barra superior mobile */
+.mobile-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+@media (max-width: 767px) {
+  .content-area {
+    padding-top: 0;
+    padding-bottom: 70px;
+  }
+}
+
+/* Offcanvas */
+.offcanvas {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+.offcanvas .nav-link {
+  color: var(--text-secondary);
+  padding: 10px 15px;
+  border-radius: var(--radius-sm);
+}
+.offcanvas .nav-link:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Cards globais */
+.card {
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
+  background-color: var(--bg-card);
+}
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+/* Progresso */
+.progress {
+  border-radius: 10px;
+  background-color: var(--bg-secondary);
+  height: 10px;
+}
+.progress-bar {
+  border-radius: 10px;
+  transition: width 0.6s ease !important;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Ripple effect para botões */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(0);
+  animation: ripple-anim 0.6s ease-out;
+  pointer-events: none;
+}
+body.dark-mode .ripple {
+  background: rgba(255, 255, 255, 0.25);
+}
+@keyframes ripple-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Indicador de status de sincronizacao */
+.sync-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.sync-status-desktop {
+  color: var(--text-secondary);
+  opacity: 0.9;
+}
+.sync-status-icon.fa-spin {
+  animation-duration: 0.9s;
+}
