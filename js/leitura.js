@@ -692,6 +692,7 @@ const Leitura = (() => {
 
   function limparFormulario() {
     form.reset();
+    document.querySelectorAll('.btn-icone-opcao.active').forEach(b => b.classList.remove('active'));
     form.classList.remove('was-validated');
     const hojeLimpa = new Date();
     const diaLimpa = String(hojeLimpa.getDate()).padStart(2, '0');
@@ -777,6 +778,10 @@ const Leitura = (() => {
     document.getElementById('local-sessao').value = sess.Local || '';
     document.getElementById('humor').value = sess.Humor || '';
     document.getElementById('clima').value = sess.Clima || '';
+    if (window.sincronizarGrupoIcones) {
+      window.sincronizarGrupoIcones('humor');
+      window.sincronizarGrupoIcones('clima');
+    }
 
     // Limpa e adiciona um campo de anotação vazio (edição de anotações não é suportada nessa versão)
     if (containerAnotacoes) {
@@ -807,7 +812,7 @@ const Leitura = (() => {
     }
   }
 
-  return { init, recarregarHistorico: carregarHistorico };
+  return { init };
 })();
 
 if (document.readyState === 'loading') {
