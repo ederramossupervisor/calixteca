@@ -111,8 +111,8 @@
       Calixteca
       <span class="sync-status" data-sync-status="sincronizado" title="Sincronizado">
         <i class="sync-status-icon fas fa-check-circle text-success"></i>
+        <span class="badge bg-warning text-dark rounded-pill d-none" data-fila-offline-contador title="Sessões aguardando sincronizar" style="font-size:0.6rem;"></span>
       </span>
-      <span class="badge bg-warning text-dark rounded-pill d-none" data-fila-offline-contador title="Sessões aguardando sincronização"></span>
     </span>
     <div class="d-flex align-items-center gap-1">
       <button class="btn btn-outline-secondary btn-sm btn-busca-global" title="Busca global">
@@ -147,7 +147,7 @@
       <div class="sync-status-desktop small text-center mb-2" data-sync-status="sincronizado" title="Sincronizado">
         <i class="sync-status-icon fas fa-check-circle text-success"></i>
         <span class="sync-status-text ms-1">Sincronizado</span>
-        <span class="badge bg-warning text-dark rounded-pill d-none ms-1" data-fila-offline-contador title="Sessões aguardando sincronização"></span>
+        <span class="badge bg-warning text-dark rounded-pill ms-1 d-none" data-fila-offline-contador title="Sessões aguardando sincronizar"></span>
       </div>
       <button id="theme-toggle" class="btn btn-outline-secondary w-100">
         <i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>
@@ -634,38 +634,34 @@
                 </div>
                 <div class="col-md-4">
                   <label for="humor" class="form-label">Humor</label>
-                  <select id="humor" class="form-select">
-                    <option value="">Selecione...</option>
-                    <option>😊 Feliz</option>
-                    <option>😐 Neutro</option>
-                    <option>😔 Triste</option>
-                    <option>😴 Cansado</option>
-                    <option>🤩 Empolgado</option>
-                    <option>😌 Relaxado</option>
-                    <option>🤔 Reflexivo</option>
-                    <option>😤 Irritado</option>
-                    <option>😢 Emocionado</option>
-                    <option>😎 Confiante</option>
-                    <option>😰 Ansioso</option>
-                    <option>🥱 Entediado</option>
-                  </select>
+                  <div class="grupo-icones-opcoes" data-alvo="humor">
+                    <button type="button" class="btn-icone-opcao" data-valor="Feliz"><i class="fas fa-face-smile"></i><span>Feliz</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Neutro"><i class="fas fa-face-meh"></i><span>Neutro</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Triste"><i class="fas fa-face-sad-tear"></i><span>Triste</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Cansado"><i class="fas fa-face-tired"></i><span>Cansado</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Empolgado"><i class="fas fa-face-grin-stars"></i><span>Empolgado</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Relaxado"><i class="fas fa-spa"></i><span>Relaxado</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Reflexivo"><i class="fas fa-brain"></i><span>Reflexivo</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Irritado"><i class="fas fa-face-angry"></i><span>Irritado</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Emocionado"><i class="fas fa-heart"></i><span>Emocionado</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Confiante"><i class="fas fa-face-grin-wide"></i><span>Confiante</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Ansioso"><i class="fas fa-face-flushed"></i><span>Ansioso</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Entediado"><i class="fas fa-face-meh-blank"></i><span>Entediado</span></button>
+                  </div>
+                  <input type="hidden" id="humor">
                 </div>
                 <div class="col-md-4">
                   <label for="clima" class="form-label">Clima</label>
-                  <select id="clima" class="form-select">
-                    <option value="">Selecione...</option>
-                    <option>☀️ Ensolarado</option>
-                    <option>☁️ Nublado</option>
-                    <option>🌧️ Chuvoso</option>
-                    <option>❄️ Frio</option>
-                    <option>🌬️ Ventando</option>
-                    <option>⛅ Parcialmente nublado</option>
-                    <option>🌩️ Tempestade</option>
-                    <option>🌫️ Neblina</option>
-                    <option>🌈 Arco-íris</option>
-                    <option>🔥 Muito calor</option>
-                    <option>🧊 Geada</option>
-                  </select>
+                  <div class="grupo-icones-opcoes" data-alvo="clima">
+                    <button type="button" class="btn-icone-opcao" data-valor="Calor"><i class="fas fa-sun"></i><span>Calor</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Frio"><i class="fas fa-temperature-low"></i><span>Frio</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Chuvoso"><i class="fas fa-cloud-rain"></i><span>Chuvoso</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Muito calor"><i class="fas fa-temperature-high"></i><span>Muito calor</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Muito frio"><i class="fas fa-snowflake"></i><span>Muito frio</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Ameno"><i class="fas fa-cloud-sun"></i><span>Ameno</span></button>
+                    <button type="button" class="btn-icone-opcao" data-valor="Tempestade"><i class="fas fa-bolt"></i><span>Tempestade</span></button>
+                  </div>
+                  <input type="hidden" id="clima">
                 </div>
               </div>
 
@@ -1672,6 +1668,7 @@
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/util.js"></script>
+  <script src="js/seletor-icones.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
 
