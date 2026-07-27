@@ -807,7 +807,7 @@ const Leitura = (() => {
     }
   }
 
-  return { init };
+  return { init, recarregarHistorico: carregarHistorico };
 })();
 
 if (document.readyState === 'loading') {
