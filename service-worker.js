@@ -29,6 +29,7 @@ const ASSETS = [
   './css/dark-mode.css',
   './css/splash.css',
   './js/util.js',
+  './js/seletor-icones.js',
   './js/api.js',
   './js/auth.js',
   './js/db.js',
