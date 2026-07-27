@@ -572,6 +572,28 @@ const Leitura = (() => {
     );
   }
 
+  function coletarAnotacoesDoForm(livroID) {
+    const anotacoes = [];
+    const itens = containerAnotacoes.querySelectorAll('.anotacao-item');
+    itens.forEach(item => {
+      const tipo = item.querySelector('.tipo-obs').value;
+      const texto = item.querySelector('.texto-obs').value.trim();
+      if (tipo && texto) {
+        anotacoes.push({
+          livroID,
+          capitulo: item.querySelector('.capitulo-obs').value || '',
+          pagina: item.querySelector('.pagina-obs').value || '',
+          categoria: tipo,
+          resumo: '',
+          trecho: '',
+          comentario: texto,
+          imagem: ''
+        });
+      }
+    });
+    return anotacoes;
+  }
+
   async function salvarSessao(e) {
     e.preventDefault();
 
@@ -581,8 +603,12 @@ const Leitura = (() => {
       return;
     }
 
-    if (!navigator.onLine) {
-      Util.toast('Você está offline. Conecte-se para registrar sessões.', 'warning');
+    // Edição de sessão existente offline continua bloqueada — sincronizar uma
+    // atualização exige mais cuidado (a sessão original já pode ter mudado
+    // no servidor nesse meio tempo), então por segurança só sessões NOVAS
+    // entram na fila offline.
+    if (!navigator.onLine && editandoSessaoID) {
+      Util.toast('Você está offline. Conecte-se para editar uma sessão existente.', 'warning');
       return;
     }
 
@@ -608,6 +634,17 @@ const Leitura = (() => {
     };
 
     const btnSubmit = form.querySelector('button[type="submit"]');
+
+    // Sem conexão e é uma sessão nova: em vez de recusar, guarda tudo
+    // localmente numa fila e envia sozinho assim que a internet voltar.
+    if (!navigator.onLine && !editandoSessaoID) {
+      const anotacoesPendentes = coletarAnotacoesDoForm(livroID);
+      await FilaOffline.adicionarSessaoPendente(sessao, anotacoesPendentes);
+      Util.toast('Sem conexão — sessão salva no aparelho e será enviada automaticamente quando a internet voltar.', 'info');
+      limparFormulario();
+      return;
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
 
@@ -621,27 +658,9 @@ const Leitura = (() => {
 
       if (resposta && resposta.status === 'ok') {
         // Salva múltiplas anotações
-        const itens = containerAnotacoes.querySelectorAll('.anotacao-item');
-        for (const item of itens) {
-          const tipo = item.querySelector('.tipo-obs').value;
-          const texto = item.querySelector('.texto-obs').value.trim();
-          if (tipo && texto) {
-            const pagina = item.querySelector('.pagina-obs').value || '';
-            const capitulo = item.querySelector('.capitulo-obs').value || '';
-            await API.enviar({
-              acao: 'addNote',
-              anotacao: {
-                livroID,
-                capitulo: capitulo,
-                pagina: pagina,
-                categoria: tipo,
-                resumo: '',
-                trecho: '',
-                comentario: texto,
-                imagem: ''
-              }
-            });
-          }
+        const anotacoesForm = coletarAnotacoesDoForm(livroID);
+        for (const anot of anotacoesForm) {
+          await API.enviar({ acao: 'addNote', anotacao: anot });
         }
 
         Util.toast(editandoSessaoID ? 'Sessão atualizada!' : 'Sessão registrada!', 'success');
@@ -653,7 +672,18 @@ const Leitura = (() => {
         throw new Error(resposta?.erro || 'Falha no servidor');
       }
     } catch (erro) {
-      Util.toast('Erro ao salvar: ' + erro.message, 'danger');
+      // Se a chamada falhou por causa da rede (não um erro do servidor) e é
+      // uma sessão nova, não perde o que a pessoa preencheu — guarda na fila
+      // do mesmo jeito que faria se já tivesse detectado offline de início.
+      const pareceFalhaDeRede = !navigator.onLine || erro instanceof TypeError;
+      if (pareceFalhaDeRede && !editandoSessaoID) {
+        const anotacoesPendentes = coletarAnotacoesDoForm(livroID);
+        await FilaOffline.adicionarSessaoPendente(sessao, anotacoesPendentes);
+        Util.toast('Falha de conexão — sessão salva no aparelho e será enviada automaticamente mais tarde.', 'info');
+        limparFormulario();
+      } else {
+        Util.toast('Erro ao salvar: ' + erro.message, 'danger');
+      }
     } finally {
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<i class="fas fa-save me-1"></i> ' + (editandoSessaoID ? 'Atualizar Sessão' : 'Registrar Sessão');
