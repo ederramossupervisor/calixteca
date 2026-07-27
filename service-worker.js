@@ -1,6 +1,6 @@
 // Calixteca – Service Worker v16 (shell completo + cache sob demanda para libs pesadas + cache de imagens/capas)
-const CACHE_NAME = 'eder-livros-v17';
-const RUNTIME_CACHE_NAME = 'eder-livros-runtime-v17';
+const CACHE_NAME = 'eder-livros-v18';
+const RUNTIME_CACHE_NAME = 'eder-livros-runtime-v18';
 
 // App shell: tudo que o app precisa pra funcionar offline logo de cara.
 // Instalado eagerly (cache.addAll) — por isso fica restrito a recursos
