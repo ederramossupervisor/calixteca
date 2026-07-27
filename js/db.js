@@ -40,6 +40,22 @@ const DB = (() => {
     configsCache: 'chave' // chave='principal'
   });
 
+  // Nova versão — fila de sessões registradas offline, aguardando envio pro
+  // Apps Script assim que a conexão voltar. '++idLocal' = chave autoincrementada
+  // só local, não confundir com o ID gerado pelo backend.
+  db.version(4).stores({
+    livros: 'ID',
+    sessoes: 'ID',
+    anotacoes: 'ID',
+    metas: 'Ano',
+    conquistas: 'ID',
+    dashboard: 'chave',
+    estatisticas: 'chave',
+    leitorEstado: 'chave',
+    configsCache: 'chave',
+    filaOffline: '++idLocal'
+  });
+
   async function salvarLivros(livros) {
     await db.livros.clear();
     await db.livros.bulkPut(livros);
@@ -146,6 +162,23 @@ const DB = (() => {
     return registro ? registro.dados : null;
   }
 
+  // ===== Fila offline (sessões registradas sem conexão) =====
+  async function adicionarNaFila(item) {
+    return await db.filaOffline.add({ ...item, criadoEm: new Date().toISOString() });
+  }
+
+  async function obterFila() {
+    return await db.filaOffline.toArray();
+  }
+
+  async function removerDaFila(idLocal) {
+    await db.filaOffline.delete(idLocal);
+  }
+
+  async function contarFila() {
+    return await db.filaOffline.count();
+  }
+
   return {
     salvarLivros,
     obterLivros,
@@ -166,6 +199,10 @@ const DB = (() => {
     obterEstadoLeitor,
     limparEstadoLeitor,
     salvarConfigsCache,
-    obterConfigsCache
+    obterConfigsCache,
+    adicionarNaFila,
+    obterFila,
+    removerDaFila,
+    contarFila
   };
 })();
