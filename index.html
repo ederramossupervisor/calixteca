@@ -112,6 +112,7 @@
       <span class="sync-status" data-sync-status="sincronizado" title="Sincronizado">
         <i class="sync-status-icon fas fa-check-circle text-success"></i>
       </span>
+      <span class="badge bg-warning text-dark rounded-pill d-none" data-fila-offline-contador title="Sessões aguardando sincronização"></span>
     </span>
     <div class="d-flex align-items-center gap-1">
       <button class="btn btn-outline-secondary btn-sm btn-busca-global" title="Busca global">
@@ -146,6 +147,7 @@
       <div class="sync-status-desktop small text-center mb-2" data-sync-status="sincronizado" title="Sincronizado">
         <i class="sync-status-icon fas fa-check-circle text-success"></i>
         <span class="sync-status-text ms-1">Sincronizado</span>
+        <span class="badge bg-warning text-dark rounded-pill d-none ms-1" data-fila-offline-contador title="Sessões aguardando sincronização"></span>
       </div>
       <button id="theme-toggle" class="btn btn-outline-secondary w-100">
         <i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>
@@ -1675,6 +1677,7 @@
 
   <!-- Módulos -->
   <script src="js/db.js"></script>
+  <script src="js/fila-offline.js"></script>
   <script src="js/livros.js"></script>
   <script src="js/ocr.js"></script>
   <script src="js/leitura.js"></script>
