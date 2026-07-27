@@ -1,11 +1,38 @@
-// Retrospectiva do ano — reaproveita os endpoints 'dashboard' e 'stats' que já
-// existem, sem precisar de nenhuma mudança no backend.
+// Retrospectiva de leitura — mostra o resumo de um ano (o corrente por
+// padrão, ou qualquer ano anterior escolhido no seletor), usando a ação
+// 'resumoAno' do backend, que já é escopada corretamente por ano.
 const Retrospectiva = (() => {
+  let anoAtualSelecionado = new Date().getFullYear();
+
   function init() {
     const btn = document.getElementById('btn-ver-retrospectiva');
     if (!btn) return;
     btn.addEventListener('click', abrir);
+
+    const select = document.getElementById('retrospectiva-ano-select');
+    if (select) {
+      popularSeletorDeAnos(select);
+      select.addEventListener('change', () => {
+        anoAtualSelecionado = Number(select.value);
+        carregar(anoAtualSelecionado);
+      });
+    }
+
     console.log('✅ Módulo Retrospectiva pronto.');
+  }
+
+  function popularSeletorDeAnos(select) {
+    const anoCorrente = new Date().getFullYear();
+    const PRIMEIRO_ANO_APP = 2024; // ajuste aqui se sua conta for mais antiga
+    const anoMaisAntigo = Math.min(PRIMEIRO_ANO_APP, anoCorrente);
+    select.innerHTML = '';
+    for (let ano = anoCorrente; ano >= anoMaisAntigo; ano--) {
+      const opt = document.createElement('option');
+      opt.value = ano;
+      opt.textContent = ano;
+      select.appendChild(opt);
+    }
+    select.value = anoCorrente;
   }
 
   async function abrir() {
@@ -14,57 +41,55 @@ const Retrospectiva = (() => {
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
+    anoAtualSelecionado = new Date().getFullYear();
+    const select = document.getElementById('retrospectiva-ano-select');
+    if (select) select.value = anoAtualSelecionado;
+
+    await carregar(anoAtualSelecionado);
+  }
+
+  async function carregar(ano) {
     const corpo = document.getElementById('retrospectiva-corpo');
     corpo.innerHTML = '<div class="text-center py-5"><span class="spinner-border" role="status"></span></div>';
 
     try {
-      const [dashboard, stats] = await Promise.all([
-        API.enviar({ acao: 'dashboard' }),
-        API.enviar({ acao: 'stats' })
-      ]);
-      if (!dashboard || dashboard.erro || !stats || stats.erro) {
-        throw new Error('Resposta inválida da API');
-      }
-      renderizar(dashboard, stats);
+      const resumo = await API.enviar({ acao: 'resumoAno', ano });
+      if (!resumo || resumo.erro) throw new Error('Resposta inválida da API');
+      renderizar(resumo);
     } catch (e) {
       console.warn('Falha ao montar retrospectiva:', e);
-      corpo.innerHTML = '<p class="text-danger text-center py-4">Não foi possível montar sua retrospectiva agora. Verifique sua conexão e tente de novo.</p>';
+      corpo.innerHTML = '<p class="text-danger text-center py-4">Não foi possível montar a retrospectiva agora. Verifique sua conexão e tente de novo.</p>';
     }
   }
 
-  function renderizar(dashboard, stats) {
-    const ano = new Date().getFullYear();
+  function renderizar(resumo) {
     const corpo = document.getElementById('retrospectiva-corpo');
-
-    const generosOrdenados = [...(stats.generos || [])].sort((a, b) => b.count - a.count);
-    const generoTop = generosOrdenados[0];
-    const autorTop = (stats.topAutores || [])[0];
 
     corpo.innerHTML = `
       <div id="retrospectiva-cartao" class="retrospectiva-cartao">
-        <div class="retrospectiva-ano">${ano}</div>
+        <div class="retrospectiva-ano">${resumo.ano}</div>
         <h3 class="retrospectiva-titulo">Sua retrospectiva de leitura</h3>
         <div class="retrospectiva-grid">
           <div class="retrospectiva-item">
-            <div class="retrospectiva-numero">${dashboard.livrosFinalizadosAno || 0}</div>
+            <div class="retrospectiva-numero">${resumo.livrosFinalizados || 0}</div>
             <div class="retrospectiva-label">livros finalizados</div>
           </div>
           <div class="retrospectiva-item">
-            <div class="retrospectiva-numero">${(dashboard.paginasAno || 0).toLocaleString('pt-BR')}</div>
+            <div class="retrospectiva-numero">${(resumo.paginasLidas || 0).toLocaleString('pt-BR')}</div>
             <div class="retrospectiva-label">páginas lidas</div>
           </div>
           <div class="retrospectiva-item">
-            <div class="retrospectiva-numero">${dashboard.horasTotal || 0}h</div>
-            <div class="retrospectiva-label">de leitura (total)</div>
+            <div class="retrospectiva-numero">${resumo.horasLidas || 0}h</div>
+            <div class="retrospectiva-label">de leitura no ano</div>
           </div>
           <div class="retrospectiva-item">
-            <div class="retrospectiva-numero">${dashboard.maiorSequencia || 0}</div>
-            <div class="retrospectiva-label">dias seguidos (recorde)</div>
+            <div class="retrospectiva-numero">${resumo.diasComLeitura || 0}</div>
+            <div class="retrospectiva-label">dias com leitura</div>
           </div>
         </div>
-        ${generoTop ? `<p class="retrospectiva-destaque">Gênero favorito: <strong>${Util.escapeHTML(generoTop.genero)}</strong></p>` : ''}
-        ${autorTop ? `<p class="retrospectiva-destaque">Autor mais lido: <strong>${Util.escapeHTML(autorTop.nome)}</strong> (${autorTop.livros} livro${autorTop.livros === 1 ? '' : 's'})</p>` : ''}
-        <p class="retrospectiva-destaque">Velocidade média: <strong>${stats.velocidadeMedia || 0} pág/h</strong></p>
+        ${resumo.generoTop ? `<p class="retrospectiva-destaque">Gênero favorito: <strong>${Util.escapeHTML(resumo.generoTop.nome)}</strong></p>` : ''}
+        ${resumo.autorTop ? `<p class="retrospectiva-destaque">Autor mais lido: <strong>${Util.escapeHTML(resumo.autorTop.nome)}</strong> (${resumo.autorTop.count} livro${resumo.autorTop.count === 1 ? '' : 's'})</p>` : ''}
+        <p class="retrospectiva-destaque">Velocidade média: <strong>${resumo.velocidadeMedia || 0} pág/h</strong></p>
         <div class="retrospectiva-marca">
           <img src="img/icons/icon-128x128.png" alt="Ícone" style="height: 2.2em; vertical-align: middle; margin-right: 0.3em;">
           Calixteca
@@ -73,7 +98,7 @@ const Retrospectiva = (() => {
 
     const btnBaixar = document.getElementById('btn-baixar-retrospectiva');
     if (btnBaixar) {
-      btnBaixar.onclick = () => baixarImagem(btnBaixar, ano);
+      btnBaixar.onclick = () => baixarImagem(btnBaixar, resumo.ano);
     }
   }
 
