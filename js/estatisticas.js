@@ -18,6 +18,34 @@ const Estatisticas = (() => {
     Chart.defaults.borderColor = corGradeGrafico();
   }
 
+  // Lê uma cor direto das variáveis CSS (variables.css) em vez de hardcoded,
+  // pra os gráficos acompanharem o tema (claro/escuro/futuras mudanças de cor).
+  function corCSS(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#5C6B5A';
+  }
+  function corCSSrgba(varName, alpha) {
+    const hex = corCSS(varName).replace('#', '');
+    const bigint = parseInt(hex, 16);
+    if (isNaN(bigint)) return `rgba(92,107,90,${alpha})`;
+    const r = (bigint >> 16) & 255, g = (bigint >> 8) & 255, b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // Paleta de cores gerada dinamicamente pro gráfico de gêneros — antes era um
+  // array fixo de 6 cores, então a partir do 7º gênero cadastrado duas fatias
+  // do doughnut ficavam com a cor idêntica. Usando o ângulo áureo, qualquer
+  // quantidade de gêneros recebe tons bem distribuídos e nunca repetidos.
+  function gerarPaletaGeneros(n) {
+    const sat = 32;
+    const luz = temaEscuro() ? 58 : 42;
+    const cores = [];
+    for (let i = 0; i < n; i++) {
+      const matiz = (i * 137.508) % 360;
+      cores.push(`hsl(${matiz.toFixed(0)}, ${sat}%, ${luz}%)`);
+    }
+    return cores;
+  }
+
   async function init() {
     const page = document.getElementById('page-estatisticas');
     if (!page || !page.classList.contains('active')) return;
@@ -121,7 +149,7 @@ const Estatisticas = (() => {
         datasets: [{
           label: 'Livros finalizados',
           data: dados.valores,
-          backgroundColor: 'rgba(92, 107, 90, 0.75)',
+          backgroundColor: corCSSrgba('--primary', 0.75),
           borderRadius: 4
         }]
       },
@@ -148,10 +176,10 @@ const Estatisticas = (() => {
         datasets: [{
           label: 'Páginas',
           data: dados.valores,
-          borderColor: '#5C6B5A',
+          borderColor: corCSS('--primary'),
           tension: 0.3,
           fill: true,
-          backgroundColor: 'rgba(92,107,90,0.12)'
+          backgroundColor: corCSSrgba('--primary', 0.12)
         }]
       },
       options: {
@@ -177,7 +205,7 @@ const Estatisticas = (() => {
         labels: generos.map(g => g.genero),
         datasets: [{
           data: generos.map(g => g.count),
-          backgroundColor: ['#5C6B5A','#8B7D6B','#B79C6B','#46543F','#A9A08C','#8B4A3D']
+          backgroundColor: gerarPaletaGeneros(generos.length)
         }]
       },
       options: {
@@ -200,7 +228,7 @@ const Estatisticas = (() => {
         datasets: [{
           label: 'Minutos',
           data: dados.valores,
-          backgroundColor: 'rgba(139, 125, 107, 0.75)',
+          backgroundColor: corCSSrgba('--secondary', 0.75),
           borderRadius: 4
         }]
       },
@@ -227,8 +255,8 @@ const Estatisticas = (() => {
         datasets: [{
           label: 'Páginas/hora',
           data: dados.valores,
-          borderColor: '#8B4A3D',
-          backgroundColor: 'rgba(139, 74, 61, 0.12)',
+          borderColor: corCSS('--accent'),
+          backgroundColor: corCSSrgba('--accent', 0.12),
           tension: 0.3,
           fill: true,
           pointRadius: 5,
@@ -263,27 +291,71 @@ const Estatisticas = (() => {
     });
   }
 
+  // Heatmap no formato "calendário de contribuições" (colunas = semanas,
+  // linhas = domingo a sábado). Antes só eram exibidos os 84 dias mais
+  // recentes num grid auto-fill sem alinhamento por dia da semana; o backend
+  // já manda o ano inteiro (365 dias), então agora usamos tudo e alinhamos
+  // cada célula na linha correta (Dom-Sáb), igual GitHub/Duolingo.
   function criarHeatmap(heatmapData) {
     const container = document.getElementById('heatmap-container');
     if (!container) return;
     container.innerHTML = '';
+    if (!heatmapData || !heatmapData.length) return;
 
-    const diasExibir = heatmapData.slice(0, 84).reverse();
-    const maxPag = Math.max(...diasExibir.map(d => d.paginas), 1);
+    // Backend manda do mais recente pro mais antigo — inverte pra ordem
+    // cronológica (mais antigo primeiro), necessário pra alinhar as colunas.
+    const dias = heatmapData.slice().reverse();
+    const maxPag = Math.max(...dias.map(d => d.paginas), 1);
 
+    function parseDataLocal(iso) {
+      const [ano, mes, dia] = iso.split('-').map(Number);
+      return new Date(ano, mes - 1, dia); // evita o "dia -1" do parse em UTC
+    }
     function formatarDataBrasileira(iso) {
       const partes = iso.split('-');
       return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    diasExibir.forEach(dia => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'heatmap-wrapper';
+
+    const labels = document.createElement('div');
+    labels.className = 'heatmap-weekday-labels';
+    ['', 'Seg', '', 'Qua', '', 'Sex', ''].forEach(txt => {
+      const span = document.createElement('span');
+      span.textContent = txt;
+      labels.appendChild(span);
+    });
+
+    const grid = document.createElement('div');
+    grid.className = 'heatmap-grid';
+
+    // Preenche células vazias no início pra alinhar o primeiro dia real com
+    // sua linha de dia da semana correta (0 = Domingo).
+    const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+      const vazio = document.createElement('div');
+      vazio.className = 'heatmap-cell heatmap-cell-vazia';
+      grid.appendChild(vazio);
+    }
+
+    dias.forEach(dia => {
       const cell = document.createElement('div');
       cell.className = 'heatmap-cell';
       const intensidade = dia.paginas / maxPag;
       cell.style.backgroundColor = getHeatColor(intensidade);
-      cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} páginas`;
-      container.appendChild(cell);
+      cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
+      grid.appendChild(cell);
     });
+
+    wrapper.appendChild(labels);
+    wrapper.appendChild(grid);
+    container.appendChild(wrapper);
+
+    // Mostra o período mais recente (hoje) por padrão, já que o ano inteiro
+    // é mais largo que a tela — sem isso o usuário abriria a tela vendo
+    // janeiro passado em vez do dia de hoje.
+    requestAnimationFrame(() => { wrapper.scrollLeft = wrapper.scrollWidth; });
   }
 
   function getHeatColor(intensidade) {
@@ -418,7 +490,7 @@ const Estatisticas = (() => {
             datasets: [{
               label: 'Páginas lidas',
               data: dados.distribuicaoClima.map(item => item.paginas),
-              backgroundColor: 'rgba(92, 107, 90, 0.7)',
+              backgroundColor: corCSSrgba('--primary', 0.7),
               borderRadius: 4
             }]
           },
@@ -488,7 +560,7 @@ const Estatisticas = (() => {
         datasets: [{
           label: sufixoLabel,
           data: lista.map(item => item.velocidade),
-          backgroundColor: 'rgba(139, 74, 61, 0.7)',
+          backgroundColor: corCSSrgba('--accent', 0.7),
           borderRadius: 4
         }]
       },
