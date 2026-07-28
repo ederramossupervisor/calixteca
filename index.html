@@ -729,312 +729,301 @@
         </div>
       </div>
     </div>
-    <!-- ==================== PÁGINAS PLACEHOLDER ==================== -->
-        <!-- ==================== PÁGINA: Estatísticas ==================== -->
-    <div id="page-estatisticas" class="page">
-      <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-          <h1 class="mb-0">Estatísticas</h1>
-          <button type="button" class="btn btn-outline-primary" id="btn-ver-retrospectiva">
-            <i class="fas fa-star me-1"></i> Retrospectiva do ano
-          </button>
-        </div>
-    
-        <!-- Cards resumo -->
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-              <div class="card-body">
-                <i class="fas fa-book fa-2x text-primary mb-2"></i>
-                <h5 id="stat-total-livros">0</h5>
-                <small>Total de livros</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-              <div class="card-body">
-                <i class="fas fa-file-alt fa-2x text-success mb-2"></i>
-                <h5 id="stat-total-paginas">0</h5>
-                <small>Páginas lidas</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-              <div class="card-body">
-                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
-                <h5 id="stat-total-horas">0</h5>
-                <small>Horas de leitura</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card text-center shadow-sm">
-              <div class="card-body">
-                <i class="fas fa-tachometer-alt fa-2x text-danger mb-2"></i>
-                <h5 id="stat-velocidade">0</h5>
-                <small>Páginas/hora</small>
-              </div>
-            </div>
+    <!-- ==================== PÁGINA: Estatísticas ==================== -->
+<div id="page-estatisticas" class="page">
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h1 class="mb-0">Estatísticas</h1>
+      <button type="button" class="btn btn-outline-primary" id="btn-ver-retrospectiva">
+        <i class="fas fa-star me-1"></i> Retrospectiva do ano
+      </button>
+    </div>
+
+    <!-- Cards resumo (4 cards, 2 por linha em médio) -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-book fa-2x text-primary mb-2"></i>
+            <h5 id="stat-total-livros">0</h5>
+            <small>Total de livros</small>
           </div>
         </div>
-    
-        <!-- Insights -->
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header fw-bold"><i class="fas fa-lightbulb text-warning me-2"></i>Percepções</div>
-          <div class="card-body" id="insights-container">
-            <ul class="list-group list-group-flush" id="insights-list"></ul>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-file-alt fa-2x text-success mb-2"></i>
+            <h5 id="stat-total-paginas">0</h5>
+            <small>Páginas lidas</small>
           </div>
         </div>
-    
-        <!-- Gráficos principais (sem duplicação de velocidade por humor) -->
-        <div class="row g-3">
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Livros finalizados por mês</h5>
-                <canvas id="grafico-finalizados-mes" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Páginas lidas (últimos 30 dias)</h5>
-                <canvas id="grafico-paginas-dia" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Distribuição por gênero</h5>
-                <canvas id="grafico-generos" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Tempo de leitura por dia da semana</h5>
-                <canvas id="grafico-dia-semana" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Evolução da Velocidade (páginas/hora)</h5>
-                <canvas id="grafico-velocidade-mensal" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Páginas lidas por clima</h5>
-                <canvas id="grafico-paginas-clima" height="200"></canvas>
-                <p class="text-muted small mt-2 mb-0" id="aviso-paginas-clima"></p>
-              </div>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Mapa de calor de leitura (últimos meses)</h5>
-                <div id="heatmap-container" class="d-flex flex-wrap gap-1 justify-content-center"></div>
-                <div class="d-flex justify-content-center mt-2">
-                  <small class="me-2">Menos</small>
-                  <div class="d-flex gap-1 align-items-center">
-                    <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
-                    <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
-                    <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
-                    <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
-                    <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
-                  </div>
-                  <small class="ms-2">Mais</small>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Top Autores</h5>
-                <ul class="list-group" id="top-autores"></ul>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5>Top Editoras</h5>
-                <ul class="list-group" id="top-editoras"></ul>
-              </div>
-            </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+            <h5 id="stat-total-horas">0</h5>
+            <small>Horas de leitura</small>
           </div>
         </div>
-    
-        <!-- Calendário de Leitura -->
-        <div class="col-12 mt-4">
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0"><i class="fa-solid fa-calendar-days"></i> Calendário de Leitura</h5>
-                <div>
-                  <button id="calendario-mes-anterior" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
-                  <span id="calendario-mes-ano" class="mx-2 fw-bold"></span>
-                  <button id="calendario-mes-proximo" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
-                  <button id="btn-compartilhar-calendario" class="btn btn-sm btn-outline-primary ms-2" title="Baixar imagem do calendário"><i class="fas fa-camera"></i></button>
-                </div>
-              </div>
-              <div class="row row-cols-7 text-center fw-bold small mb-2" style="color: var(--text-secondary);">
-                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-              </div>
-              <div id="calendario-grid" class="row row-cols-7 g-1">
-                <!-- Preenchido dinamicamente -->
-              </div>
-            </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-tachometer-alt fa-2x text-danger mb-2"></i>
+            <h5 id="stat-velocidade">0</h5>
+            <small>Páginas/hora</small>
           </div>
         </div>
-
-        <!-- ==================== INSIGHTS AVANÇADOS ==================== -->
-        <div class="col-12 mt-4">
-          <div class="card shadow-sm">
-            <div class="card-header fw-bold">
-              <i class="fas fa-brain me-2"></i>Insights Avançados (Hábitos de Leitura)
-            </div>
-            <div class="card-body">
-              <!-- Mensagens textuais personalizadas -->
-              <ul class="list-group list-group-flush mb-4" id="insights-avancados-list">
-                <li class="list-group-item text-muted">Carregando insights personalizados...</li>
-              </ul>
-
-              <!-- Gráficos de Velocidade (4 gráficos em 3 colunas) -->
-              <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                  <h6 class="small text-muted">Velocidade por Gênero</h6>
-                  <canvas id="grafico-velocidade-genero" height="150"></canvas>
-                </div>
-                <div class="col-md-4">
-                  <h6 class="small text-muted">Velocidade por Período</h6>
-                  <canvas id="grafico-velocidade-periodo" height="150"></canvas>
-                </div>
-                <div class="col-md-4">
-                  <h6 class="small text-muted">Velocidade por Humor</h6>
-                  <canvas id="grafico-velocidade-humor" height="150"></canvas>
-                </div>
-                <div class="col-md-4 offset-md-4">
-                  <h6 class="small text-muted">Velocidade por Duração</h6>
-                  <canvas id="grafico-velocidade-duracao" height="150"></canvas>
-                </div>
-              </div>
-
-              <!-- Tabelas de Dados Cruzados + Gráfico de Páginas por Clima -->
-              <div class="row g-3">
-                <!-- Coluna 1: Clima (tabela + gráfico) -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">🌤️ Distribuição por Clima</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-clima">
-                      <thead><tr><th>Clima</th><th>Sessões</th><th>Duração</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                  <div class="mt-3">
-                    <!-- Gráfico de páginas por clima (já incluso no card principal, mas opcional aqui) -->
-                  </div>
-                </div>
-
-                <!-- Coluna 2: Nota média por humor -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">🎭 Nota Média por Humor</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-nota-humor">
-                      <thead><tr><th>Humor</th><th>Nota</th><th>Sessões</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Coluna 3: Velocidade por local -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">📍 Velocidade por Local</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-local-velocidade">
-                      <thead><tr><th>Local</th><th>Velocidade</th><th>Duração</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Coluna 4: Taxa de abandono por gênero -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">🚫 Taxa de Abandono por Gênero</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-abandono-genero">
-                      <thead><tr><th>Gênero</th><th>Finaliz.</th><th>Aband.</th><th>%</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Coluna 5: Nota média por gênero -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">⭐ Nota Média por Gênero</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-nota-genero">
-                      <thead><tr><th>Gênero</th><th>Nota</th><th>Livros</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Coluna 6: Dias médios por gênero -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">📅 Dias Médios por Gênero</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-dias-genero">
-                      <thead><tr><th>Gênero</th><th>Dias</th><th>Livros</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Coluna 7: Densidade de anotações -->
-                <div class="col-md-6 col-lg-4">
-                  <h6 class="small text-muted">📝 Densidade de Anotações</h6>
-                  <div style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-striped mb-0" id="tabela-densidade-anotacoes">
-                      <thead><tr><th>Gênero</th><th>Anot./100 pág</th></tr></thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- ==================== FIM INSIGHTS AVANÇADOS ==================== -->
-    
-        <!-- Locais de Leitura (NOVO) -->
-        <div class="col-12 mt-4">
-          <div class="card shadow-sm">
-            <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-              <span><i class="fas fa-map-marker-alt me-2"></i>Mapa de Locais de Leitura</span>
-              <button id="btn-atualizar-mapa" class="btn btn-sm btn-outline-secondary" title="Atualizar mapa">
-                <i class="fas fa-sync-alt"></i>
-              </button>
-            </div>
-            <div class="card-body p-0">
-              <div id="mapa-locais" style="height: 450px;"></div>
-            </div>
-          </div>
-        </div>
-    
       </div>
     </div>
+
+    <!-- Insights gerais -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header fw-bold"><i class="fas fa-lightbulb text-warning me-2"></i>Percepções</div>
+      <div class="card-body" id="insights-container">
+        <ul class="list-group list-group-flush" id="insights-list"></ul>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS PRINCIPAIS (5 gráficos, 2 por linha) -->
+    <div class="row g-3">
+      <!-- 1. Livros finalizados por mês -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Livros finalizados por mês</h5>
+            <canvas id="grafico-finalizados-mes" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Páginas lidas (últimos 30 dias) -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Páginas lidas (últimos 30 dias)</h5>
+            <canvas id="grafico-paginas-dia" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Distribuição por gênero -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Distribuição por gênero</h5>
+            <canvas id="grafico-generos" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Tempo de leitura por dia da semana -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Tempo de leitura por dia da semana</h5>
+            <canvas id="grafico-dia-semana" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Evolução da Velocidade (páginas/hora) -->
+      <div class="col-md-6 offset-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Evolução da Velocidade (páginas/hora)</h5>
+            <canvas id="grafico-velocidade-mensal" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa de calor (ocupa linha inteira) -->
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Mapa de calor de leitura (últimos meses)</h5>
+            <div id="heatmap-container" class="d-flex flex-wrap gap-1 justify-content-center"></div>
+            <div class="d-flex justify-content-center mt-2">
+              <small class="me-2">Menos</small>
+              <div class="d-flex gap-1 align-items-center">
+                <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
+              </div>
+              <small class="ms-2">Mais</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Autores e Editoras (2 colunas, lado a lado) -->
+    <div class="row g-3 mt-3">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Top Autores</h5>
+            <ul class="list-group" id="top-autores"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Top Editoras</h5>
+            <ul class="list-group" id="top-editoras"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendário de Leitura (linha inteira) -->
+    <div class="col-12 mt-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fa-solid fa-calendar-days"></i> Calendário de Leitura</h5>
+            <div>
+              <button id="calendario-mes-anterior" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+              <span id="calendario-mes-ano" class="mx-2 fw-bold"></span>
+              <button id="calendario-mes-proximo" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+              <button id="btn-compartilhar-calendario" class="btn btn-sm btn-outline-primary ms-2" title="Baixar imagem do calendário"><i class="fas fa-camera"></i></button>
+            </div>
+          </div>
+          <div class="row row-cols-7 text-center fw-bold small mb-2" style="color: var(--text-secondary);">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div id="calendario-grid" class="row row-cols-7 g-1">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS AVANÇADOS (com gráficos de velocidade em 3 colunas) -->
+    <div class="col-12 mt-4">
+      <div class="card shadow-sm">
+        <div class="card-header fw-bold">
+          <i class="fas fa-brain me-2"></i>Insights Avançados (Hábitos de Leitura)
+        </div>
+        <div class="card-body">
+          <!-- Mensagens textuais -->
+          <ul class="list-group list-group-flush mb-4" id="insights-avancados-list">
+            <li class="list-group-item text-muted">Carregando insights personalizados...</li>
+          </ul>
+
+          <!-- Gráficos de Velocidade (4 gráficos, 3 colunas) -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <h6 class="small text-muted">Velocidade por Gênero</h6>
+              <canvas id="grafico-velocidade-genero" height="150"></canvas>
+            </div>
+            <div class="col-md-4">
+              <h6 class="small text-muted">Velocidade por Período</h6>
+              <canvas id="grafico-velocidade-periodo" height="150"></canvas>
+            </div>
+            <div class="col-md-4">
+              <h6 class="small text-muted">Velocidade por Humor</h6>
+              <canvas id="grafico-velocidade-humor" height="150"></canvas>
+            </div>
+            <div class="col-md-4 offset-md-4">
+              <h6 class="small text-muted">Velocidade por Duração</h6>
+              <canvas id="grafico-velocidade-duracao" height="150"></canvas>
+            </div>
+          </div>
+
+          <!-- Tabelas de dados cruzados -->
+          <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">🌤️ Distribuição por Clima</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-clima">
+                  <thead><tr><th>Clima</th><th>Sessões</th><th>Duração</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">🎭 Nota Média por Humor</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-nota-humor">
+                  <thead><tr><th>Humor</th><th>Nota</th><th>Sessões</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">📍 Velocidade por Local</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-local-velocidade">
+                  <thead><tr><th>Local</th><th>Velocidade</th><th>Duração</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">🚫 Taxa de Abandono por Gênero</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-abandono-genero">
+                  <thead><tr><th>Gênero</th><th>Finaliz.</th><th>Aband.</th><th>%</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">⭐ Nota Média por Gênero</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-nota-genero">
+                  <thead><tr><th>Gênero</th><th>Nota</th><th>Livros</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">📅 Dias Médios por Gênero</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-dias-genero">
+                  <thead><tr><th>Gênero</th><th>Dias</th><th>Livros</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <h6 class="small text-muted">📝 Densidade de Anotações</h6>
+              <div style="max-height: 200px; overflow-y: auto;">
+                <table class="table table-sm table-striped mb-0" id="tabela-densidade-anotacoes">
+                  <thead><tr><th>Gênero</th><th>Anot./100 pág</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa de Locais de Leitura -->
+    <div class="col-12 mt-4">
+      <div class="card shadow-sm">
+        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-map-marker-alt me-2"></i>Mapa de Locais de Leitura</span>
+          <button id="btn-atualizar-mapa" class="btn btn-sm btn-outline-secondary" title="Atualizar mapa">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div id="mapa-locais" style="height: 450px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
     <!-- ==================== FIM DA PÁGINA ESTATÍSTICAS ==================== -->
     <div id="page-metas" class="page">
       <div class="container py-4">
