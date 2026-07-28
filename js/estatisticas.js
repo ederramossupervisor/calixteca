@@ -42,6 +42,10 @@ const Estatisticas = (() => {
         Util.toast('Sem conexão e nenhum dado em cache.', 'danger');
       }
     }
+
+    // Insights Avançados (hábitos ultrapersonalizados) — busca à parte pra
+    // não atrasar/quebrar o carregamento do restante da tela se algo falhar.
+    carregarInsightsAvancados();
   }
 
   function processarDados(dados) {
@@ -354,6 +358,112 @@ const Estatisticas = (() => {
     } else {
       ul.innerHTML = '<li class="list-group-item text-muted">Nenhum insight disponível.</li>';
     }
+  }
+
+  /* ==================== INSIGHTS AVANÇADOS (hábitos ultrapersonalizados) ==================== */
+
+  async function carregarInsightsAvancados() {
+    try {
+      const dados = await API.enviar({ acao: 'insightsAvancados' });
+      if (dados && !dados.erro) {
+        renderizarInsightsAvancados(dados);
+      }
+    } catch (e) {
+      console.warn('Falha ao carregar insights avançados:', e);
+    }
+  }
+
+  function renderizarInsightsAvancados(dados) {
+    // Mensagens textuais prontas
+    const ul = document.getElementById('insights-avancados-list');
+    if (ul) {
+      ul.innerHTML = '';
+      if (dados.mensagens && dados.mensagens.length) {
+        dados.mensagens.forEach(texto => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item';
+          li.innerHTML = `<i class="fas fa-lightbulb text-warning me-2"></i>${Util.escapeHTML(texto)}`;
+          ul.appendChild(li);
+        });
+      } else {
+        ul.innerHTML = '<li class="list-group-item text-muted">Registre mais sessões (com Humor, Clima e Local) para desbloquear insights personalizados.</li>';
+      }
+    }
+
+    aplicarTemaGraficos();
+    criarGraficoBarraSimples('grafico-velocidade-genero', dados.velocidadePorGenero, 'pág/h');
+    criarGraficoBarraSimples('grafico-velocidade-periodo', dados.velocidadePorPeriodo, 'pág/h');
+    criarGraficoBarraSimples('grafico-velocidade-humor', dados.velocidadePorHumor, 'pág/h');
+    criarGraficoBarraSimples('grafico-velocidade-duracao', dados.velocidadePorDuracao, 'pág/h');
+
+    preencherTabela('tabela-clima', dados.distribuicaoClima, r => [r.clima, r.sessoes, `${r.duracaoMedia} min`]);
+    preencherTabela('tabela-nota-humor', dados.notaMediaPorHumor, r => [r.humor, r.notaMedia, r.sessoes]);
+    preencherTabela('tabela-local-velocidade', dados.velocidadePorLocal, r => [r.local, `${r.velocidade} pág/h`, `${r.duracaoMedia} min`]);
+    preencherTabela('tabela-abandono-genero', dados.taxaAbandonoPorGenero, r => [r.genero, r.finalizados, r.abandonados, `${r.taxaAbandono}%`]);
+    preencherTabela('tabela-nota-genero', dados.notaMediaPorGenero, r => [r.genero, r.notaMedia, r.livros]);
+    preencherTabela('tabela-dias-genero', dados.diasMediosPorGenero, r => [r.genero, `${r.diasMedios} dias`, r.livros]);
+    preencherTabela('tabela-densidade-anotacoes', dados.densidadeAnotacoesPorGenero, r => [r.genero, r.densidade]);
+  }
+
+  // Gráfico de barra genérico pra listas no formato [{ chave, velocidade, sessoes }]
+  // vindas do backend — usado pelos 4 recortes de velocidade (gênero, período
+  // do dia, humor, duração da sessão).
+  function criarGraficoBarraSimples(canvasId, lista, sufixoLabel) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (graficos[canvasId]) graficos[canvasId].destroy();
+    if (!lista || lista.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    graficos[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: lista.map(item => item.chave),
+        datasets: [{
+          label: sufixoLabel,
+          data: lista.map(item => item.velocidade),
+          backgroundColor: 'rgba(139, 74, 61, 0.7)',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) { return context.parsed.y + ' ' + sufixoLabel; }
+            }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: corTextoGrafico() }, grid: { color: corGradeGrafico() } },
+          x: { ticks: { color: corTextoGrafico() }, grid: { color: corGradeGrafico() } }
+        }
+      }
+    });
+  }
+
+  // Preenche uma <table> pelo ID com uma lista de objetos, usando
+  // formatarLinha(item) => array de valores (um por coluna).
+  function preencherTabela(tabelaId, lista, formatarLinha) {
+    const tabela = document.getElementById(tabelaId);
+    if (!tabela) return;
+    const tbody = tabela.querySelector('tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!lista || lista.length === 0) {
+      const colspan = tabela.querySelectorAll('thead th').length || 1;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Sem dados suficientes ainda</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    lista.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = formatarLinha(item).map(v => `<td>${Util.escapeHTML(String(v))}</td>`).join('');
+      tbody.appendChild(tr);
+    });
   }
 
   return { init };
