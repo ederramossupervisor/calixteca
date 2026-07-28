@@ -374,36 +374,103 @@ const Estatisticas = (() => {
   }
 
   function renderizarInsightsAvancados(dados) {
-    // Mensagens textuais prontas
-    const ul = document.getElementById('insights-avancados-list');
-    if (ul) {
-      ul.innerHTML = '';
-      if (dados.mensagens && dados.mensagens.length) {
-        dados.mensagens.forEach(texto => {
-          const li = document.createElement('li');
-          li.className = 'list-group-item';
-          li.innerHTML = `<i class="fas fa-lightbulb text-warning me-2"></i>${Util.escapeHTML(texto)}`;
-          ul.appendChild(li);
+  // ----- Mensagens textuais personalizadas -----
+  const ul = document.getElementById('insights-avancados-list');
+  if (ul) {
+    ul.innerHTML = '';
+    if (dados.mensagens && dados.mensagens.length) {
+      dados.mensagens.forEach(texto => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<i class="fas fa-lightbulb text-warning me-2"></i>${Util.escapeHTML(texto)}`;
+        ul.appendChild(li);
+      });
+    } else {
+      ul.innerHTML = '<li class="list-group-item text-muted">Registre mais sessões (com Humor, Clima e Local) para desbloquear insights personalizados.</li>';
+    }
+  }
+
+  // Aplica o tema atual aos gráficos (cores dos eixos, etc.)
+  aplicarTemaGraficos();
+
+  // ----- Gráficos de Velocidade -----
+  criarGraficoBarraSimples('grafico-velocidade-genero', dados.velocidadePorGenero, 'pág/h');
+  criarGraficoBarraSimples('grafico-velocidade-periodo', dados.velocidadePorPeriodo, 'pág/h');
+  criarGraficoBarraSimples('grafico-velocidade-humor', dados.velocidadePorHumor, 'pág/h');
+  criarGraficoBarraSimples('grafico-velocidade-duracao', dados.velocidadePorDuracao, 'pág/h');
+
+  // ----- NOVO: Gráfico de Páginas por Clima -----
+  const canvasClima = document.getElementById('grafico-paginas-clima');
+  if (canvasClima) {
+    // Destroi gráfico anterior se existir
+    if (graficos['paginasClima']) graficos['paginasClima'].destroy();
+
+    // Verifica se há dados de clima com páginas
+    if (dados.distribuicaoClima && dados.distribuicaoClima.length) {
+      // Verifica se o objeto contém a propriedade 'paginas' (adicionada no backend)
+      const temPaginas = dados.distribuicaoClima.some(item => item.paginas !== undefined);
+      if (temPaginas) {
+        const ctx = canvasClima.getContext('2d');
+        graficos['paginasClima'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: dados.distribuicaoClima.map(item => item.clima),
+            datasets: [{
+              label: 'Páginas lidas',
+              data: dados.distribuicaoClima.map(item => item.paginas),
+              backgroundColor: 'rgba(92, 107, 90, 0.7)',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return context.parsed.y + ' páginas';
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: corTextoGrafico() },
+                grid: { color: corGradeGrafico() }
+              },
+              x: {
+                ticks: { color: corTextoGrafico() },
+                grid: { color: corGradeGrafico() }
+              }
+            }
+          }
         });
       } else {
-        ul.innerHTML = '<li class="list-group-item text-muted">Registre mais sessões (com Humor, Clima e Local) para desbloquear insights personalizados.</li>';
+        // Se o backend ainda não retornou 'paginas', mostra aviso
+        canvasClima.parentElement.innerHTML +=
+          '<p class="text-muted small">Atualize o backend para exibir páginas por clima.</p>';
       }
+    } else {
+      // Se não houver dados, limpa o canvas e mostra mensagem
+      const ctx = canvasClima.getContext('2d');
+      ctx.clearRect(0, 0, canvasClima.width, canvasClima.height);
+      canvasClima.parentElement.innerHTML +=
+        '<p class="text-muted small">Nenhuma sessão com clima registrado.</p>';
     }
-
-    aplicarTemaGraficos();
-    criarGraficoBarraSimples('grafico-velocidade-genero', dados.velocidadePorGenero, 'pág/h');
-    criarGraficoBarraSimples('grafico-velocidade-periodo', dados.velocidadePorPeriodo, 'pág/h');
-    criarGraficoBarraSimples('grafico-velocidade-humor', dados.velocidadePorHumor, 'pág/h');
-    criarGraficoBarraSimples('grafico-velocidade-duracao', dados.velocidadePorDuracao, 'pág/h');
-
-    preencherTabela('tabela-clima', dados.distribuicaoClima, r => [r.clima, r.sessoes, `${r.duracaoMedia} min`]);
-    preencherTabela('tabela-nota-humor', dados.notaMediaPorHumor, r => [r.humor, r.notaMedia, r.sessoes]);
-    preencherTabela('tabela-local-velocidade', dados.velocidadePorLocal, r => [r.local, `${r.velocidade} pág/h`, `${r.duracaoMedia} min`]);
-    preencherTabela('tabela-abandono-genero', dados.taxaAbandonoPorGenero, r => [r.genero, r.finalizados, r.abandonados, `${r.taxaAbandono}%`]);
-    preencherTabela('tabela-nota-genero', dados.notaMediaPorGenero, r => [r.genero, r.notaMedia, r.livros]);
-    preencherTabela('tabela-dias-genero', dados.diasMediosPorGenero, r => [r.genero, `${r.diasMedios} dias`, r.livros]);
-    preencherTabela('tabela-densidade-anotacoes', dados.densidadeAnotacoesPorGenero, r => [r.genero, r.densidade]);
   }
+
+  // ----- Preenchimento das Tabelas -----
+  preencherTabela('tabela-clima', dados.distribuicaoClima, r => [r.clima, r.sessoes, `${r.duracaoMedia} min`]);
+  preencherTabela('tabela-nota-humor', dados.notaMediaPorHumor, r => [r.humor, r.notaMedia, r.sessoes]);
+  preencherTabela('tabela-local-velocidade', dados.velocidadePorLocal, r => [r.local, `${r.velocidade} pág/h`, `${r.duracaoMedia} min`]);
+  preencherTabela('tabela-abandono-genero', dados.taxaAbandonoPorGenero, r => [r.genero, r.finalizados, r.abandonados, `${r.taxaAbandono}%`]);
+  preencherTabela('tabela-nota-genero', dados.notaMediaPorGenero, r => [r.genero, r.notaMedia, r.livros]);
+  preencherTabela('tabela-dias-genero', dados.diasMediosPorGenero, r => [r.genero, `${r.diasMedios} dias`, r.livros]);
+  preencherTabela('tabela-densidade-anotacoes', dados.densidadeAnotacoesPorGenero, r => [r.genero, r.densidade]);
+}
 
   // Gráfico de barra genérico pra listas no formato [{ chave, velocidade, sessoes }]
   // vindas do backend — usado pelos 4 recortes de velocidade (gênero, período
