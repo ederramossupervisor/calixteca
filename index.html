@@ -906,6 +906,109 @@
             </div>
           </div>
         </div>
+
+                <!-- ==================== INSIGHTS AVANÇADOS ==================== -->
+        <div class="col-12 mt-4">
+          <div class="card shadow-sm">
+            <div class="card-header fw-bold">
+              <i class="fas fa-brain me-2"></i>Insights Avançados (Hábitos de Leitura)
+            </div>
+            <div class="card-body">
+              <!-- Mensagens textuais personalizadas -->
+              <ul class="list-group list-group-flush mb-4" id="insights-avancados-list">
+                <li class="list-group-item text-muted">Carregando insights personalizados...</li>
+              </ul>
+
+              <!-- Gráficos de Velocidade -->
+              <div class="row g-3 mb-4">
+                <div class="col-md-6 col-lg-3">
+                  <h6 class="small text-muted">Velocidade por Gênero</h6>
+                  <canvas id="grafico-velocidade-genero" height="150"></canvas>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <h6 class="small text-muted">Velocidade por Período</h6>
+                  <canvas id="grafico-velocidade-periodo" height="150"></canvas>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <h6 class="small text-muted">Velocidade por Humor</h6>
+                  <canvas id="grafico-velocidade-humor" height="150"></canvas>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <h6 class="small text-muted">Velocidade por Duração</h6>
+                  <canvas id="grafico-velocidade-duracao" height="150"></canvas>
+                </div>
+              </div>
+
+              <!-- Tabelas de Dados Cruzados -->
+              <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">🌤️ Distribuição por Clima</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-clima">
+                      <thead><tr><th>Clima</th><th>Sessões</th><th>Duração</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">🎭 Nota Média por Humor</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-nota-humor">
+                      <thead><tr><th>Humor</th><th>Nota</th><th>Sessões</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">📍 Velocidade por Local</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-local-velocidade">
+                      <thead><tr><th>Local</th><th>Velocidade</th><th>Duração</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">🚫 Taxa de Abandono por Gênero</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-abandono-genero">
+                      <thead><tr><th>Gênero</th><th>Finaliz.</th><th>Aband.</th><th>%</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">⭐ Nota Média por Gênero</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-nota-genero">
+                      <thead><tr><th>Gênero</th><th>Nota</th><th>Livros</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">📅 Dias Médios por Gênero</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-dias-genero">
+                      <thead><tr><th>Gênero</th><th>Dias</th><th>Livros</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                  <h6 class="small text-muted">📝 Densidade de Anotações</h6>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="tabela-densidade-anotacoes">
+                      <thead><tr><th>Gênero</th><th>Anot./100 pág</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ==================== FIM INSIGHTS AVANÇADOS ==================== -->
     
         <!-- Locais de Leitura (NOVO) -->
         <div class="col-12 mt-4">
