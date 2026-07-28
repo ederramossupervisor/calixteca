@@ -46,16 +46,35 @@ const Estatisticas = (() => {
     return cores;
   }
 
+  // Cards de resumo que mostram skeleton enquanto os dados não chegam —
+  // mesmo padrão já usado no dashboard.js, pra não deixar "0" pintado na
+  // tela por um instante como se o usuário não tivesse nenhum dado.
+  const skeletonIds = ['stat-total-livros', 'stat-total-paginas', 'stat-total-horas', 'stat-velocidade'];
+  function mostrarSkeletons() {
+    skeletonIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.classList.add('skeleton-placeholder'); el.textContent = '...'; }
+    });
+  }
+  function ocultarSkeletons() {
+    skeletonIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('skeleton-placeholder');
+    });
+  }
+
   async function init() {
     const page = document.getElementById('page-estatisticas');
     if (!page || !page.classList.contains('active')) return;
 
     console.log('📊 Carregando estatísticas...');
+    mostrarSkeletons();
     try {
       const dados = await API.enviar({ acao: 'stats' });
       if (dados && !dados.erro) {
         // Salva no cache offline
         DB.salvarEstatisticas(dados).catch(e => console.warn('Cache stats falhou:', e));
+        ocultarSkeletons();
         processarDados(dados);
       } else {
         throw new Error(dados?.erro || 'Dados inválidos');
@@ -64,9 +83,11 @@ const Estatisticas = (() => {
       console.warn('Falha na API, tentando cache offline...');
       const cached = await DB.obterEstatisticas();
       if (cached) {
+        ocultarSkeletons();
         processarDados(cached);
         Util.toast('Modo offline - dados do último acesso.', 'info');
       } else {
+        ocultarSkeletons();
         Util.toast('Sem conexão e nenhum dado em cache.', 'danger');
       }
     }
@@ -74,6 +95,68 @@ const Estatisticas = (() => {
     // Insights Avançados (hábitos ultrapersonalizados) — busca à parte pra
     // não atrasar/quebrar o carregamento do restante da tela se algo falhar.
     carregarInsightsAvancados();
+
+    // Resumo do ano selecionado (seletor de ano) — só inicializa o seletor
+    // na primeira vez que a tela abre; trocas de ano são feitas pelo evento
+    // 'change', sem recarregar o resto da página.
+    inicializarSeletorDeAno();
+  }
+
+  /* ==================== RESUMO DO ANO (seletor) ====================
+     Reaproveita a ação 'resumoAno' do backend — a mesma que a Retrospectiva
+     usa — pra exibir, direto na tela de Estatísticas, um resumo escopado a
+     um ano específico (passado ou corrente), sem precisar abrir o modal. */
+  let seletorAnoInicializado = false;
+
+  function inicializarSeletorDeAno() {
+    const select = document.getElementById('estatisticas-ano-select');
+    if (!select) return;
+
+    if (!seletorAnoInicializado) {
+      seletorAnoInicializado = true;
+      const anoCorrente = new Date().getFullYear();
+      const PRIMEIRO_ANO_APP = 2024; // mesmo ajuste usado em retrospectiva.js
+      select.innerHTML = '';
+      for (let ano = anoCorrente; ano >= Math.min(PRIMEIRO_ANO_APP, anoCorrente); ano--) {
+        const opt = document.createElement('option');
+        opt.value = ano;
+        opt.textContent = ano;
+        select.appendChild(opt);
+      }
+      select.value = anoCorrente;
+      select.addEventListener('change', () => carregarResumoAno(Number(select.value)));
+    }
+
+    carregarResumoAno(Number(select.value));
+  }
+
+  async function carregarResumoAno(ano) {
+    const tituloAno = document.getElementById('resumoano-titulo-ano');
+    if (tituloAno) tituloAno.textContent = ano;
+
+    try {
+      const resumo = await API.enviar({ acao: 'resumoAno', ano });
+      if (!resumo || resumo.erro) throw new Error('Resposta inválida da API');
+      preencherResumoAno(resumo);
+    } catch (e) {
+      console.warn('Falha ao carregar resumo do ano:', e);
+      Util.toast('Não foi possível carregar o resumo desse ano.', 'warning');
+    }
+  }
+
+  function preencherResumoAno(r) {
+    setText('resumoano-livros', r.livrosFinalizados || 0);
+    setText('resumoano-paginas', (r.paginasLidas || 0).toLocaleString('pt-BR'));
+    setText('resumoano-horas', `${r.horasLidas || 0}h`);
+    setText('resumoano-dias', r.diasComLeitura || 0);
+
+    const destaques = document.getElementById('resumoano-destaques');
+    if (!destaques) return;
+    const itens = [];
+    if (r.generoTop) itens.push(`<span><i class="fas fa-layer-group me-1"></i>Gênero favorito: <strong>${Util.escapeHTML(r.generoTop.nome)}</strong></span>`);
+    if (r.autorTop) itens.push(`<span><i class="fas fa-feather-pointed me-1"></i>Autor mais lido: <strong>${Util.escapeHTML(r.autorTop.nome)}</strong> (${r.autorTop.count})</span>`);
+    itens.push(`<span><i class="fas fa-gauge-high me-1"></i>Velocidade média: <strong>${r.velocidadeMedia || 0} pág/h</strong></span>`);
+    destaques.innerHTML = itens.join('');
   }
 
   function processarDados(dados) {
