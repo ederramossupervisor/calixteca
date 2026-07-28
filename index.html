@@ -787,81 +787,72 @@
       </div>
     </div>
 
-    <!-- GRÁFICOS PRINCIPAIS (5 gráficos, 2 por linha) -->
-    <div class="row g-3">
-      <!-- 1. Livros finalizados por mês -->
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Livros finalizados por mês</h5>
-            <canvas id="grafico-finalizados-mes" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Páginas lidas (últimos 30 dias) -->
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Páginas lidas (últimos 30 dias)</h5>
-            <canvas id="grafico-paginas-dia" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Distribuição por gênero -->
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Distribuição por gênero</h5>
-            <canvas id="grafico-generos" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. Tempo de leitura por dia da semana -->
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Tempo de leitura por dia da semana</h5>
-            <canvas id="grafico-dia-semana" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. Evolução da Velocidade (páginas/hora) -->
-      <div class="col-md-6 offset-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Evolução da Velocidade (páginas/hora)</h5>
-            <canvas id="grafico-velocidade-mensal" height="200"></canvas>
-          </div>
-        </div>
+    <!-- GRÁFICOS PRINCIPAIS (5 gráficos + mapa de calor, 2 por linha) -->
+<div class="row g-3">
+  <!-- Linha 1 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Livros finalizados por mês</h5>
+        <canvas id="grafico-finalizados-mes" height="200"></canvas>
       </div>
     </div>
-
-    <!-- Mapa de calor (ocupa linha inteira) -->
-    <div class="row mt-3">
-      <div class="col-12">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5>Mapa de calor de leitura (últimos meses)</h5>
-            <div id="heatmap-container" class="d-flex flex-wrap gap-1 justify-content-center"></div>
-            <div class="d-flex justify-content-center mt-2">
-              <small class="me-2">Menos</small>
-              <div class="d-flex gap-1 align-items-center">
-                <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
-                <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
-                <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
-                <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
-                <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
-              </div>
-              <small class="ms-2">Mais</small>
-            </div>
-          </div>
-        </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Páginas lidas (últimos 30 dias)</h5>
+        <canvas id="grafico-paginas-dia" height="200"></canvas>
       </div>
     </div>
+  </div>
+
+  <!-- Linha 2 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Distribuição por gênero</h5>
+        <canvas id="grafico-generos" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Tempo de leitura por dia da semana</h5>
+        <canvas id="grafico-dia-semana" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Linha 3 (Evolução da Velocidade + Mapa de Calor) -->
+<div class="col-md-6">
+  <div class="card shadow-sm h-100">
+    <div class="card-body">
+      <h5>Evolução da Velocidade (páginas/hora)</h5>
+      <canvas id="grafico-velocidade-mensal" height="200"></canvas>
+    </div>
+  </div>
+</div>
+<div class="col-md-6">
+  <div class="card shadow-sm h-100">
+    <div class="card-body">
+      <h5>Mapa de calor de leitura (últimos meses)</h5>
+      <div id="heatmap-container"></div>
+      <div class="d-flex justify-content-center mt-2">
+        <small class="me-2">Menos</small>
+        <div class="d-flex gap-1 align-items-center">
+          <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
+          <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
+          <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
+          <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
+          <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
+        </div>
+        <small class="ms-2">Mais</small>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Top Autores e Editoras (2 colunas, lado a lado) -->
     <div class="row g-3 mt-3">
@@ -918,21 +909,21 @@
             <li class="list-group-item text-muted">Carregando insights personalizados...</li>
           </ul>
 
-          <!-- Gráficos de Velocidade (4 gráficos, 3 colunas) -->
+          <!-- Gráficos de Velocidade (2 por linha) -->
           <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <h6 class="small text-muted">Velocidade por Gênero</h6>
               <canvas id="grafico-velocidade-genero" height="150"></canvas>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <h6 class="small text-muted">Velocidade por Período</h6>
               <canvas id="grafico-velocidade-periodo" height="150"></canvas>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <h6 class="small text-muted">Velocidade por Humor</h6>
               <canvas id="grafico-velocidade-humor" height="150"></canvas>
             </div>
-            <div class="col-md-4 offset-md-4">
+            <div class="col-md-6">
               <h6 class="small text-muted">Velocidade por Duração</h6>
               <canvas id="grafico-velocidade-duracao" height="150"></canvas>
             </div>
@@ -941,7 +932,7 @@
           <!-- Tabelas de dados cruzados -->
           <div class="row g-3">
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">🌤️ Distribuição por Clima</h6>
+              <h6 class="small text-muted"><i class="fas fa-cloud-sun me-2"></i> Distribuição por Clima</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-clima">
                   <thead><tr><th>Clima</th><th>Sessões</th><th>Duração</th></tr></thead>
@@ -950,7 +941,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">🎭 Nota Média por Humor</h6>
+              <h6 class="small text-muted"><i class="fas fa-masks-theater me-2"></i> Nota Média por Humor</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-nota-humor">
                   <thead><tr><th>Humor</th><th>Nota</th><th>Sessões</th></tr></thead>
@@ -959,7 +950,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">📍 Velocidade por Local</h6>
+              <h6 class="small text-muted"><i class="fas fa-location-dot me-2"></i> Velocidade por Local</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-local-velocidade">
                   <thead><tr><th>Local</th><th>Velocidade</th><th>Duração</th></tr></thead>
@@ -968,7 +959,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">🚫 Taxa de Abandono por Gênero</h6>
+              <h6 class="small text-muted"><i class="fas fa-ban me-2"></i> Taxa de Abandono por Gênero</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-abandono-genero">
                   <thead><tr><th>Gênero</th><th>Finaliz.</th><th>Aband.</th><th>%</th></tr></thead>
@@ -977,7 +968,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">⭐ Nota Média por Gênero</h6>
+              <h6 class="small text-muted"><i class="fas fa-star me-2"></i> Nota Média por Gênero</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-nota-genero">
                   <thead><tr><th>Gênero</th><th>Nota</th><th>Livros</th></tr></thead>
@@ -986,7 +977,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">📅 Dias Médios por Gênero</h6>
+              <h6 class="small text-muted"><i class="fas fa-calendar-days me-2"></i> Dias Médios por Gênero</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-dias-genero">
                   <thead><tr><th>Gênero</th><th>Dias</th><th>Livros</th></tr></thead>
@@ -995,7 +986,7 @@
               </div>
             </div>
             <div class="col-md-6 col-lg-4">
-              <h6 class="small text-muted">📝 Densidade de Anotações</h6>
+              <h6 class="small text-muted"><i class="fas fa-pen-fancy me-2"></i> Densidade de Anotações</h6>
               <div style="max-height: 200px; overflow-y: auto;">
                 <table class="table table-sm table-striped mb-0" id="tabela-densidade-anotacoes">
                   <thead><tr><th>Gênero</th><th>Anot./100 pág</th></tr></thead>
