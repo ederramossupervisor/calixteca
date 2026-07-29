@@ -216,6 +216,20 @@ const Estatisticas = (() => {
     });
   }
 
+  // Atualiza o "(ano)" nos cabeçalhos dos cards/gráficos escopados por ano —
+  // chamado toda vez que os dados de um novo ano chegam, pra manter os
+  // títulos sincronizados com o que está sendo exibido.
+  function atualizarTitulosComAno(ano) {
+    const ids = [
+      'titulo-ano-finalizados-mes',
+      'titulo-ano-generos',
+      'titulo-ano-dia-semana',
+      'titulo-ano-velocidade',
+      'titulo-ano-heatmap'
+    ];
+    ids.forEach(id => setText(id, `(${ano})`));
+  }
+
   function criarGraficoFinalizadosMes(dados) {
     const canvas = document.getElementById('grafico-finalizados-mes');
     if (!canvas) return;
