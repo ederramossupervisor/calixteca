@@ -1,62 +1,52 @@
 /* Estatísticas */
 
-/* ===== HEATMAP (calendário de contribuições: semanas x dias da semana) ===== */
+/* ===== HEATMAP (calendário de contribuições: dias da semana em colunas fixas, semanas crescendo pra baixo) ===== */
 #heatmap-container {
   width: 100%;
-  min-height: 200px; /* mesma altura do gráfico de velocidade */
-  display: flex;
-  align-items: center;
   padding: 4px;
 }
-
 .heatmap-wrapper {
   display: flex;
-  gap: 6px;
-  width: 100%;
-  overflow-x: auto;
-  padding-bottom: 6px;
-}
-
-.heatmap-weekday-labels {
-  display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  flex: 0 0 auto;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px; /* espaço pra não colar na barra de rolagem vertical */
+}
+.heatmap-weekday-labels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
   font-size: 0.65rem;
   color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-card);
+  z-index: 1;
 }
-.heatmap-weekday-labels span {
-  height: 13px;
-  line-height: 13px;
-}
-
 .heatmap-grid {
   display: grid;
-  grid-template-rows: repeat(7, 13px);
-  grid-auto-flow: column;
-  grid-auto-columns: 13px;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 13px;
   gap: 3px;
-  flex: 0 0 auto;
+  width: 100%;
 }
-
 .heatmap-cell {
-  width: 13px;
-  height: 13px;
   border-radius: 3px;
   cursor: pointer;
   transition: transform 0.1s;
 }
-
 .heatmap-cell-vazia {
   cursor: default;
   background: transparent !important;
 }
-
 .heatmap-cell:hover {
-  transform: scale(1.3);
+  transform: scale(1.2);
   z-index: 2;
 }
-
 /* ===== INSIGHTS (gerais e avançados) ===== */
 #insights-list li {
   background: var(--bg-secondary);
