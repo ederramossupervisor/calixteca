@@ -152,6 +152,8 @@ const Estatisticas = (() => {
       if (select) select.value = anoSelecionado;
     }
 
+    atualizarTitulosComAno(anoSelecionado);
+
     preencherResumo(dados);
     criarInsights(dados.insights);
 
