@@ -1,5 +1,6 @@
 const Estatisticas = (() => {
   const graficos = {};
+  let anoSelecionado = new Date().getFullYear();
 
   // Cores dos gráficos conforme o tema ativo (claro/escuro) — o Chart.js não
   // acompanha as variáveis CSS sozinho, então lemos a classe 'dark-mode' do
@@ -68,11 +69,60 @@ const Estatisticas = (() => {
     if (!page || !page.classList.contains('active')) return;
 
     console.log('📊 Carregando estatísticas...');
+
+    // Popula o seletor de ano uma única vez e prende o listener de troca —
+    // trocar o ano dispara carregarEstatisticas(ano) de novo, sem recarregar
+    // o resto da página.
+    popularSeletorDeAno();
+
+    await carregarEstatisticas(anoSelecionado);
+
+    // Insights Avançados (hábitos ultrapersonalizados) — busca à parte pra
+    // não atrasar/quebrar o carregamento do restante da tela se algo falhar.
+    // Não é escopado por ano (cruza o histórico inteiro de sessões).
+    carregarInsightsAvancados();
+  }
+
+  /* ==================== SELETOR DE ANO ====================
+     Os 4 cards do topo (Total de livros, Páginas, Horas, Velocidade) e todos
+     os gráficos abaixo — exceto "Páginas lidas (últimos 30 dias)", que
+     continua sempre relativo a hoje — passam a refletir o ano escolhido
+     aqui. Reaproveita o mesmo intervalo de anos (desde 2024) que a
+     Retrospectiva usa. */
+  let seletorAnoPopulado = false;
+
+  function popularSeletorDeAno() {
+    const select = document.getElementById('estatisticas-ano-select');
+    if (!select) return;
+
+    if (!seletorAnoPopulado) {
+      seletorAnoPopulado = true;
+      const anoCorrente = new Date().getFullYear();
+      const PRIMEIRO_ANO_APP = 2024; // mesmo ajuste usado em retrospectiva.js
+      select.innerHTML = '';
+      for (let ano = anoCorrente; ano >= Math.min(PRIMEIRO_ANO_APP, anoCorrente); ano--) {
+        const opt = document.createElement('option');
+        opt.value = ano;
+        opt.textContent = ano;
+        select.appendChild(opt);
+      }
+      anoSelecionado = anoCorrente;
+      select.value = anoCorrente;
+      select.addEventListener('change', () => {
+        anoSelecionado = Number(select.value);
+        carregarEstatisticas(anoSelecionado);
+      });
+    } else {
+      select.value = anoSelecionado;
+    }
+  }
+
+  async function carregarEstatisticas(ano) {
     mostrarSkeletons();
     try {
-      const dados = await API.enviar({ acao: 'stats' });
+      const dados = await API.enviar({ acao: 'stats', ano });
       if (dados && !dados.erro) {
-        // Salva no cache offline
+        // Salva no cache offline (guarda só o último ano visualizado)
         DB.salvarEstatisticas(dados).catch(e => console.warn('Cache stats falhou:', e));
         ocultarSkeletons();
         processarDados(dados);
@@ -91,75 +141,17 @@ const Estatisticas = (() => {
         Util.toast('Sem conexão e nenhum dado em cache.', 'danger');
       }
     }
-
-    // Insights Avançados (hábitos ultrapersonalizados) — busca à parte pra
-    // não atrasar/quebrar o carregamento do restante da tela se algo falhar.
-    carregarInsightsAvancados();
-
-    // Resumo do ano selecionado (seletor de ano) — só inicializa o seletor
-    // na primeira vez que a tela abre; trocas de ano são feitas pelo evento
-    // 'change', sem recarregar o resto da página.
-    inicializarSeletorDeAno();
-  }
-
-  /* ==================== RESUMO DO ANO (seletor) ====================
-     Reaproveita a ação 'resumoAno' do backend — a mesma que a Retrospectiva
-     usa — pra exibir, direto na tela de Estatísticas, um resumo escopado a
-     um ano específico (passado ou corrente), sem precisar abrir o modal. */
-  let seletorAnoInicializado = false;
-
-  function inicializarSeletorDeAno() {
-    const select = document.getElementById('estatisticas-ano-select');
-    if (!select) return;
-
-    if (!seletorAnoInicializado) {
-      seletorAnoInicializado = true;
-      const anoCorrente = new Date().getFullYear();
-      const PRIMEIRO_ANO_APP = 2024; // mesmo ajuste usado em retrospectiva.js
-      select.innerHTML = '';
-      for (let ano = anoCorrente; ano >= Math.min(PRIMEIRO_ANO_APP, anoCorrente); ano--) {
-        const opt = document.createElement('option');
-        opt.value = ano;
-        opt.textContent = ano;
-        select.appendChild(opt);
-      }
-      select.value = anoCorrente;
-      select.addEventListener('change', () => carregarResumoAno(Number(select.value)));
-    }
-
-    carregarResumoAno(Number(select.value));
-  }
-
-  async function carregarResumoAno(ano) {
-    const tituloAno = document.getElementById('resumoano-titulo-ano');
-    if (tituloAno) tituloAno.textContent = ano;
-
-    try {
-      const resumo = await API.enviar({ acao: 'resumoAno', ano });
-      if (!resumo || resumo.erro) throw new Error('Resposta inválida da API');
-      preencherResumoAno(resumo);
-    } catch (e) {
-      console.warn('Falha ao carregar resumo do ano:', e);
-      Util.toast('Não foi possível carregar o resumo desse ano.', 'warning');
-    }
-  }
-
-  function preencherResumoAno(r) {
-    setText('resumoano-livros', r.livrosFinalizados || 0);
-    setText('resumoano-paginas', (r.paginasLidas || 0).toLocaleString('pt-BR'));
-    setText('resumoano-horas', `${r.horasLidas || 0}h`);
-    setText('resumoano-dias', r.diasComLeitura || 0);
-
-    const destaques = document.getElementById('resumoano-destaques');
-    if (!destaques) return;
-    const itens = [];
-    if (r.generoTop) itens.push(`<span><i class="fas fa-layer-group me-1"></i>Gênero favorito: <strong>${Util.escapeHTML(r.generoTop.nome)}</strong></span>`);
-    if (r.autorTop) itens.push(`<span><i class="fas fa-feather-pointed me-1"></i>Autor mais lido: <strong>${Util.escapeHTML(r.autorTop.nome)}</strong> (${r.autorTop.count})</span>`);
-    itens.push(`<span><i class="fas fa-gauge-high me-1"></i>Velocidade média: <strong>${r.velocidadeMedia || 0} pág/h</strong></span>`);
-    destaques.innerHTML = itens.join('');
   }
 
   function processarDados(dados) {
+    // Mantém o seletor sincronizado com o que realmente veio do backend
+    // (relevante no fallback offline, cujo cache pode ser de outro ano).
+    if (dados.ano) {
+      anoSelecionado = dados.ano;
+      const select = document.getElementById('estatisticas-ano-select');
+      if (select) select.value = anoSelecionado;
+    }
+
     preencherResumo(dados);
     criarInsights(dados.insights);
 
@@ -175,13 +167,15 @@ const Estatisticas = (() => {
       if (dados.velocidadeMensal) {
         try { criarGraficoVelocidadeMensal(dados.velocidadeMensal); } catch(e) { console.warn(e); }
       }
-    
-      // Inicializa o Calendário de Leitura
+
+      // Inicializa o Calendário de Leitura — mantido no mês/ano corrente,
+      // independente do ano escolhido no seletor de Estatísticas (o
+      // calendário tem navegação própria de mês/ano).
       if (typeof CalendarioLeitura !== 'undefined' && CalendarioLeitura.init) {
         const hoje = new Date();
         CalendarioLeitura.init(hoje.getFullYear(), hoje.getMonth() + 1);
       }
-    
+
       // Inicializa o mapa de locais
       if (typeof MapaLeitura !== 'undefined' && MapaLeitura.init) {
         MapaLeitura.init();
@@ -190,7 +184,7 @@ const Estatisticas = (() => {
     preencherTopAutores(dados.topAutores);
     preencherTopEditoras(dados.topEditoras);
 
-    console.log('✅ Módulo Estatísticas pronto (com calendário).');
+    console.log('✅ Módulo Estatísticas pronto (ano ' + anoSelecionado + ').');
   }
 
   function prepararContainers() {
@@ -375,19 +369,18 @@ const Estatisticas = (() => {
   }
 
   // Heatmap no formato "calendário de contribuições" (colunas = semanas,
-  // linhas = domingo a sábado). Antes só eram exibidos os 84 dias mais
-  // recentes num grid auto-fill sem alinhamento por dia da semana; o backend
-  // já manda o ano inteiro (365 dias), então agora usamos tudo e alinhamos
-  // cada célula na linha correta (Dom-Sáb), igual GitHub/Duolingo.
+  // linhas = domingo a sábado). O backend agora manda o ano fechado
+  // (01/01 a 31/12 do ano selecionado) em vez de "últimos 365 dias a partir
+  // de hoje" — o alinhamento por dia da semana continua igual.
   function criarHeatmap(heatmapData) {
     const container = document.getElementById('heatmap-container');
     if (!container) return;
     container.innerHTML = '';
     if (!heatmapData || !heatmapData.length) return;
 
-    // Backend manda do mais recente pro mais antigo — inverte pra ordem
-    // cronológica (mais antigo primeiro), necessário pra alinhar as colunas.
-    const dias = heatmapData.slice().reverse();
+    // Backend manda do mais antigo pro mais recente dentro do ano — ordem
+    // cronológica já correta pra alinhar as colunas.
+    const dias = heatmapData.slice();
     const maxPag = Math.max(...dias.map(d => d.paginas), 1);
 
     function parseDataLocal(iso) {
@@ -435,10 +428,14 @@ const Estatisticas = (() => {
     wrapper.appendChild(grid);
     container.appendChild(wrapper);
 
-    // Mostra o período mais recente (hoje) por padrão, já que o ano inteiro
-    // é mais largo que a tela — sem isso o usuário abriria a tela vendo
-    // janeiro passado em vez do dia de hoje.
-    requestAnimationFrame(() => { wrapper.scrollLeft = wrapper.scrollWidth; });
+    // Se for o ano corrente, mostra o período mais recente (hoje) por
+    // padrão — sem isso o usuário abriria vendo janeiro em vez do dia de
+    // hoje. Em anos passados não há "hoje" dentro do heatmap, então deixa
+    // no início (janeiro), que é o mais natural pra revisar um ano fechado.
+    const anoCorrente = new Date().getFullYear();
+    if (anoSelecionado === anoCorrente) {
+      requestAnimationFrame(() => { wrapper.scrollLeft = wrapper.scrollWidth; });
+    }
   }
 
   function getHeatColor(intensidade) {
@@ -488,6 +485,8 @@ const Estatisticas = (() => {
   }
 
   function preencherResumo(d) {
+    // Agora "no ano selecionado": totalLivros = livros finalizados no ano,
+    // totalPaginas/totalHoras/velocidadeMedia = do ano; ver Code.gs.
     setText('stat-total-livros', d.totalLivros);
     setText('stat-total-paginas', d.totalPaginas);
     setText('stat-total-horas', d.totalHoras);
@@ -515,7 +514,9 @@ const Estatisticas = (() => {
     }
   }
 
-  /* ==================== INSIGHTS AVANÇADOS (hábitos ultrapersonalizados) ==================== */
+  /* ==================== INSIGHTS AVANÇADOS (hábitos ultrapersonalizados) ====================
+     Não é escopado por ano — cruza o histórico inteiro de sessões (Humor,
+     Clima, Local, etc.), então continua igual independente do seletor. */
 
   async function carregarInsightsAvancados() {
     try {
