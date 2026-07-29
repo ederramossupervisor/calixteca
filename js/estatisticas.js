@@ -384,19 +384,20 @@ const Estatisticas = (() => {
     });
   }
 
-  // Heatmap no formato "calendário de contribuições" (colunas = semanas,
-  // linhas = domingo a sábado). O backend agora manda o ano fechado
-  // (01/01 a 31/12 do ano selecionado) em vez de "últimos 365 dias a partir
-  // de hoje" — o alinhamento por dia da semana continua igual.
+  // Heatmap no formato "calendário de contribuições", agora rotacionado:
+  // 7 colunas fixas (dias da semana, Dom-Sáb) e semanas crescendo pra baixo,
+  // em vez de colunas de semana crescendo pros lados. Isso evita a barra de
+  // rolagem horizontal — o card só cresce em altura (limitada por
+  // max-height + overflow-y no CSS), nunca em largura.
   function criarHeatmap(heatmapData) {
     const container = document.getElementById('heatmap-container');
     if (!container) return;
     container.innerHTML = '';
     if (!heatmapData || !heatmapData.length) return;
 
-    // Backend manda do mais antigo pro mais recente dentro do ano — ordem
-    // cronológica já correta pra alinhar as colunas.
-    const dias = heatmapData.slice();
+    // Backend já manda em ordem cronológica ascendente (mais antigo primeiro)
+    // dentro do ano selecionado.
+    const dias = heatmapData;
     const maxPag = Math.max(...dias.map(d => d.paginas), 1);
 
     function parseDataLocal(iso) {
@@ -422,8 +423,8 @@ const Estatisticas = (() => {
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
 
-    // Preenche células vazias no início pra alinhar o primeiro dia real com
-    // sua linha de dia da semana correta (0 = Domingo).
+    // Preenche células vazias no início pra alinhar o primeiro dia real na
+    // coluna certa (0 = Domingo, primeira coluna).
     const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
     for (let i = 0; i < primeiroDiaSemana; i++) {
       const vazio = document.createElement('div');
@@ -444,13 +445,12 @@ const Estatisticas = (() => {
     wrapper.appendChild(grid);
     container.appendChild(wrapper);
 
-    // Se for o ano corrente, mostra o período mais recente (hoje) por
-    // padrão — sem isso o usuário abriria vendo janeiro em vez do dia de
-    // hoje. Em anos passados não há "hoje" dentro do heatmap, então deixa
-    // no início (janeiro), que é o mais natural pra revisar um ano fechado.
+    // Ano corrente: rola até o fim (dezembro/mais recente) por padrão.
+    // Anos passados: mantém no topo (janeiro), que é o ponto natural de
+    // partida pra revisar um ano fechado.
     const anoCorrente = new Date().getFullYear();
     if (anoSelecionado === anoCorrente) {
-      requestAnimationFrame(() => { wrapper.scrollLeft = wrapper.scrollWidth; });
+      requestAnimationFrame(() => { wrapper.scrollTop = wrapper.scrollHeight; });
     }
   }
 
