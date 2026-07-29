@@ -795,7 +795,7 @@
   <!-- Linha 1 -->
   <div class="col-md-6">
     <div class="card shadow-sm">
-      <div class="card-header fw-bold"><i class="fas fa-book me-2"></i>Livros finalizados por mês (ano selecionado)</div>
+      <div class="card-header fw-bold"><i class="fas fa-book me-2"></i>Livros finalizados por mês <span id="titulo-ano-finalizados-mes"></span></div>
       <div class="card-body">
         <canvas id="grafico-finalizados-mes" height="200"></canvas>
       </div>
@@ -813,7 +813,7 @@
   <!-- Linha 2 -->
   <div class="col-md-6">
     <div class="card shadow-sm">
-      <div class="card-header fw-bold"><i class="fas fa-layer-group me-2"></i>Distribuição por gênero (ano selecionado)</div>
+      <div class="card-header fw-bold"><i class="fas fa-layer-group me-2"></i>Distribuição por gênero <span id="titulo-ano-generos"></span></div>
       <div class="card-body">
         <canvas id="grafico-generos" height="200"></canvas>
       </div>
@@ -821,7 +821,7 @@
   </div>
   <div class="col-md-6">
     <div class="card shadow-sm">
-      <div class="card-header fw-bold"><i class="fas fa-calendar-week me-2"></i>Tempo de leitura por dia da semana (ano selecionado)</div>
+      <div class="card-header fw-bold"><i class="fas fa-calendar-week me-2"></i>Tempo de leitura por dia da semana <span id="titulo-ano-dia-semana"></span></div>
       <div class="card-body">
         <canvas id="grafico-dia-semana" height="200"></canvas>
       </div>
@@ -829,17 +829,17 @@
   </div>
 
   <!-- Linha 3 (Evolução da Velocidade + Mapa de Calor) -->
-<div class="col-md-6">
-  <div class="card shadow-sm h-100">
-    <div class="card-header fw-bold"><i class="fas fa-gauge-high me-2"></i>Evolução da Velocidade (páginas/hora) — ano selecionado</div>
-    <div class="card-body">
-      <canvas id="grafico-velocidade-mensal" height="200"></canvas>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-bold"><i class="fas fa-gauge-high me-2"></i>Evolução da Velocidade (páginas/hora) <span id="titulo-ano-velocidade"></span></div>
+      <div class="card-body">
+        <canvas id="grafico-velocidade-mensal" height="200"></canvas>
+      </div>
     </div>
   </div>
-</div>
 <div class="col-md-6">
   <div class="card shadow-sm h-100">
-    <div class="card-header fw-bold"><i class="fas fa-fire me-2"></i>Mapa de calor de leitura (ano selecionado)</div>
+    <div class="card-header fw-bold"><i class="fas fa-fire me-2"></i>Mapa de calor de leitura <span id="titulo-ano-heatmap"></span></div>
     <div class="card-body">
       <div id="heatmap-container"></div>
       <div class="d-flex justify-content-center mt-2">
