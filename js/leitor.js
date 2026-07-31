@@ -345,9 +345,9 @@ const Leitor = (() => {
     els.container.style.position = 'relative';
     els.container.innerHTML = `
       <div id="leitor-conteudo" style="width:100%; height:100%; overflow:hidden;"></div>
-      <div id="zona-clique-esquerda" style="position:absolute; top:0; left:0; width:35%; height:100%; z-index:100; cursor:pointer;"></div>
-      <div id="zona-clique-centro" style="position:absolute; top:0; left:35%; width:30%; height:100%; z-index:100; cursor:pointer;"></div>
-      <div id="zona-clique-direita" style="position:absolute; top:0; right:0; width:35%; height:100%; z-index:100; cursor:pointer;"></div>
+      <div id="zona-clique-esquerda" style="position:absolute; top:0; left:0; width:35%; height:100%; z-index:100; cursor:pointer; pointer-events:none;"></div>
+      <div id="zona-clique-centro" style="position:absolute; top:0; left:35%; width:30%; height:100%; z-index:100; cursor:pointer; pointer-events:none;"></div>
+      <div id="zona-clique-direita" style="position:absolute; top:0; right:0; width:35%; height:100%; z-index:100; cursor:pointer; pointer-events:none;"></div>
       <div id="popup-selecao-leitor" class="popup-selecao-leitor d-none">
         <button type="button" class="btn btn-sm btn-warning" id="btn-grifar-selecao"><i class="fas fa-highlighter"></i> Grifar</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-citar-selecao"><i class="fas fa-quote-right"></i> Citar</button>
@@ -370,22 +370,88 @@ const Leitor = (() => {
 
     const usarZonasDeToque = tipoArquivo !== 'epub' || config.modoRolagem !== 'continuo';
 
+    // As zonas ficam com pointer-events:none (ver prepararEstruturaContainer):
+    // elas só marcam visualmente as áreas de navegação, quem realmente trata
+    // o toque/clique é o listener único em configurarNavegacaoPorToque, que
+    // sabe ignorar o gesto quando o usuário está selecionando texto (grifo).
     [zE, zC, zD].forEach(z => { if (z) z.style.display = usarZonasDeToque ? '' : 'none'; });
 
     if (usarZonasDeToque) {
-      if (zE) {
-        zE.onclick = (e) => { e.preventDefault(); e.stopPropagation(); paginaAnterior(); };
-      }
-      if (zC) {
-        zC.onclick = (e) => { e.preventDefault(); e.stopPropagation(); alternarBarrasLeitor(); };
-      }
-      if (zD) {
-        zD.onclick = (e) => { e.preventDefault(); e.stopPropagation(); proximaPagina(); };
-      }
       configurarGestosSwipe(els.container);
-    } else {
-      [zE, zC, zD].forEach(z => { if (z) z.onclick = null; });
+      configurarNavegacaoPorToque(els.container);
     }
+  }
+
+  // ========== NAVEGAÇÃO POR TOQUE/CLIQUE (CORREÇÃO 6) ==========
+  // Antes, as zonas de clique tinham pointer-events:auto e ficavam por cima
+  // de todo o conteúdo (z-index:100), o que impedia o navegador de detectar
+  // a seleção de texto necessária para grifar — o toque/clique nunca chegava
+  // ao texto, era sempre capturado pela zona. Agora as zonas só definem a
+  // área visual; a decisão de virar página ou alternar as barras é tomada
+  // aqui, num único listener de clique no container, que abre mão da ação
+  // sempre que houver uma seleção de texto ativa (ou o clique for no popup
+  // de Grifar/Citar), deixando a seleção funcionar normalmente.
+  function configurarNavegacaoPorToque(container) {
+    if (!container || container.dataset.tapNavConfigurado) return;
+    container.dataset.tapNavConfigurado = '1';
+
+    container.addEventListener('click', (e) => {
+      // Não interfere com cliques no próprio popup de Grifar/Citar
+      if (e.target.closest && e.target.closest('#popup-selecao-leitor')) return;
+
+      // Não vira página se o usuário estiver selecionando (ou acabou de
+      // selecionar) um trecho de texto para grifar
+      const selecao = window.getSelection ? window.getSelection().toString() : '';
+      if (selecao && selecao.trim().length > 0) return;
+
+      const usarZonasAgora = tipoArquivo !== 'epub' || config.modoRolagem !== 'continuo';
+      if (!usarZonasAgora) return;
+
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const proporcao = rect.width > 0 ? x / rect.width : 0.5;
+
+      if (proporcao < 0.35) paginaAnterior();
+      else if (proporcao > 0.65) proximaPagina();
+      else alternarBarrasLeitor();
+    });
+  }
+
+  // ========== NAVEGAÇÃO POR TOQUE DENTRO DO IFRAME DO EPUB (CORREÇÃO 6b) ==========
+  // O conteúdo do EPUB é renderizado pelo epub.js dentro de um <iframe>. Cliques
+  // e toques feitos dentro desse iframe não se propagam para os listeners do
+  // documento pai (é um "browsing context" separado), então o listener do
+  // container (configurarNavegacaoPorToque) nunca é acionado para eles. Por
+  // isso registramos, via rendition.hooks.content, um listener equivalente
+  // dentro de cada seção renderizada, usando o próprio "contents" do epub.js
+  // (contents.document / contents.window) para checar posição do clique e
+  // se há uma seleção de texto ativa (nesse caso, não vira página — deixa o
+  // usuário grifar).
+  function configurarNavegacaoPorToqueNoEpub() {
+    if (!rendition || !rendition.hooks || !rendition.hooks.content) return;
+    if (rendition.__tapNavHookRegistrado) return;
+    rendition.__tapNavHookRegistrado = true;
+
+    rendition.hooks.content.register((contents) => {
+      const doc = contents && contents.document;
+      if (!doc || doc.__tapNavConfigurado) return;
+      doc.__tapNavConfigurado = true;
+
+      doc.addEventListener('click', (e) => {
+        const selecao = contents.window && contents.window.getSelection ? contents.window.getSelection().toString() : '';
+        if (selecao && selecao.trim().length > 0) return;
+
+        if (config.modoRolagem === 'continuo') return;
+
+        const largura = doc.documentElement ? doc.documentElement.clientWidth : 0;
+        if (!largura) return;
+        const proporcao = e.clientX / largura;
+
+        if (proporcao < 0.35) paginaAnterior();
+        else if (proporcao > 0.65) proximaPagina();
+        else alternarBarrasLeitor();
+      });
+    });
   }
 
   // ========== GESTOS DE SWIPE (CORREÇÃO 5) ==========
@@ -904,6 +970,8 @@ const Leitor = (() => {
   // modal de cartão de citação já existente no app, se disponível).
   function configurarEventosSelecaoEpub() {
     if (!rendition) return;
+
+    configurarNavegacaoPorToqueNoEpub();
 
     rendition.on('selected', (cfiRange, contents) => {
       const texto = contents.window.getSelection().toString().trim();
@@ -1505,7 +1573,7 @@ const Leitor = (() => {
       }
     });
 
-    const navSessao = document.querySelector('[data-page="sessao"]') || document.querySelector('[data-page="sessoes"]');
+    const navSessao = document.querySelector('[data-page="leitura"]');
     navSessao?.click();
 
     if (typeof Util !== 'undefined' && Util.toast) {
