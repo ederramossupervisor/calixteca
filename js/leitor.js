@@ -451,6 +451,15 @@ const Leitor = (() => {
         else if (proporcao > 0.65) proximaPagina();
         else alternarBarrasLeitor();
       });
+
+      // Mesma lógica do documento principal: fecha o popup de Grifar/Citar
+      // quando a seleção dentro do iframe do EPUB é desfeita.
+      if (doc.defaultView && doc.defaultView.getSelection) {
+        doc.addEventListener('selectionchange', () => {
+          const texto = doc.defaultView.getSelection().toString().trim();
+          if (!texto) esconderPopupSelecao();
+        });
+      }
     });
   }
 
@@ -720,6 +729,17 @@ const Leitor = (() => {
   }
 
   function configurarEventos() {
+    // Fecha o popup de Grifar/Citar assim que o usuário desfizer a seleção
+    // de texto (ex.: clicou fora, apertou Esc, tocou em outro lugar) — antes
+    // o popup ficava aberto mesmo sem nenhum trecho selecionado.
+    if (!document.__esconderPopupSelecaoConfigurado) {
+      document.__esconderPopupSelecaoConfigurado = true;
+      document.addEventListener('selectionchange', () => {
+        const texto = window.getSelection ? window.getSelection().toString().trim() : '';
+        if (!texto) esconderPopupSelecao();
+      });
+    }
+
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('#btn-abrir-epub, #btn-trocar-epub');
       if (btn) {
@@ -968,6 +988,11 @@ const Leitor = (() => {
   // Escuta seleção de texto no EPUB e mostra um pequeno popup com
   // "Grifar" (marca o trecho, persistido por CFI) e "Citar" (abre o
   // modal de cartão de citação já existente no app, se disponível).
+  function esconderPopupSelecao() {
+    const popup = document.getElementById('popup-selecao-leitor');
+    if (popup) popup.classList.add('d-none');
+  }
+
   function configurarEventosSelecaoEpub() {
     if (!rendition) return;
 
