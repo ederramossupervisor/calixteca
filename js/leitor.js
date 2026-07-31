@@ -433,83 +433,42 @@ const Leitor = (() => {
     rendition.__tapNavHookRegistrado = true;
 
     let ultimoToqueEpubTs = 0;
-    let contadorDocs = 0;
 
     rendition.hooks.content.register((contents) => {
       const doc = contents && contents.document;
       if (!doc || doc.__tapNavConfigurado) return;
       doc.__tapNavConfigurado = true;
 
-      contadorDocs++;
-      const idDoc = contadorDocs;
-      console.log(`[DIAG-EPUB-TAP] novo content/iframe registrado (#${idDoc}). CFI atual:`, rendition.location?.start?.cfi);
-
       doc.addEventListener('click', (e) => {
         const selecao = contents.window && contents.window.getSelection ? contents.window.getSelection().toString() : '';
-        const tsClique = Date.now();
+        if (selecao && selecao.trim().length > 0) return;
 
-        const iframeEl = els.container ? els.container.querySelector('#leitor-conteudo iframe') : null;
-        const larguraIframe = iframeEl ? iframeEl.getBoundingClientRect().width : null;
-        const larguraDoc = doc.documentElement ? doc.documentElement.clientWidth : null;
-
-        console.log(`[DIAG-EPUB-TAP] clique no doc #${idDoc}`, {
-          ts: tsClique,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          larguraIframe,
-          larguraDoc,
-          selecaoAtiva: selecao ? selecao.slice(0, 30) : '(vazia)',
-          modoRolagem: config.modoRolagem,
-          cfiAntes: rendition.location?.start?.cfi
-        });
-
-        if (selecao && selecao.trim().length > 0) {
-          console.log('[DIAG-EPUB-TAP] ignorado: há seleção de texto ativa');
-          return;
-        }
-
-        if (config.modoRolagem === 'continuo') {
-          console.log('[DIAG-EPUB-TAP] ignorado: modo de rolagem contínua');
-          return;
-        }
+        if (config.modoRolagem === 'continuo') return;
 
         // Trava simples: ignora um segundo clique/toque disparado logo em
         // seguida do anterior (ex.: touchend + click sintético do navegador
-        // para o mesmo gesto), que era a causa de "clico e avança, clico no
-        // mesmo lugar e volta" — o mesmo toque acabava virando a página
-        // duas vezes, uma em cada sentido.
-        if (tsClique - ultimoToqueEpubTs < 500) {
-          console.log(`[DIAG-EPUB-TAP] ignorado: disparo repetido em menos de 500ms (delta=${tsClique - ultimoToqueEpubTs}ms)`);
-          return;
-        }
-        ultimoToqueEpubTs = tsClique;
+        // para o mesmo gesto).
+        const agora = Date.now();
+        if (agora - ultimoToqueEpubTs < 500) return;
+        ultimoToqueEpubTs = agora;
 
-        // Medir a largura pelo elemento <iframe> visto de fora (documento
-        // pai) é mais confiável do que medir de dentro do próprio conteúdo:
-        // o epub.js pode alterar margens/colunas internas entre uma página
-        // e outra, o que fazia o mesmo ponto da tela cair em zonas
-        // diferentes dependendo da página exibida.
-        const largura = larguraIframe || larguraDoc || 0;
-        if (!largura) {
-          console.log('[DIAG-EPUB-TAP] ignorado: largura não pôde ser medida');
-          return;
-        }
+        // IMPORTANTE: a largura tem que ser medida pelo wrapper
+        // "#leitor-conteudo" (a área realmente VISÍVEL, com overflow:hidden),
+        // e não pelo próprio <iframe> do epub.js. O epub.js estica o
+        // <iframe> para caber TODAS as colunas/páginas do capítulo lado a
+        // lado (ex.: 328px de página × 499 páginas = ~163.672px de largura
+        // real do iframe) e é o wrapper que recorta e mostra só uma "fatia"
+        // por vez. Medir pelo iframe fazia o cálculo da proporção do
+        // clique ficar errado em capítulos com mais de uma página,
+        // invertendo o sentido da navegação.
+        const wrapperEl = document.getElementById('leitor-conteudo');
+        const largura = wrapperEl ? wrapperEl.getBoundingClientRect().width : 0;
+        if (!largura) return;
         const proporcao = e.clientX / largura;
 
-        let acao;
-        if (proporcao < 0.35) acao = 'paginaAnterior';
-        else if (proporcao > 0.65) acao = 'proximaPagina';
-        else acao = 'alternarBarrasLeitor';
-
-        console.log(`[DIAG-EPUB-TAP] proporcao=${proporcao.toFixed(3)} -> ação=${acao}`);
-
-        if (acao === 'paginaAnterior') paginaAnterior();
-        else if (acao === 'proximaPagina') proximaPagina();
+        if (proporcao < 0.35) paginaAnterior();
+        else if (proporcao > 0.65) proximaPagina();
         else alternarBarrasLeitor();
-
-        setTimeout(() => {
-          console.log('[DIAG-EPUB-TAP] CFI depois da ação:', rendition.location?.start?.cfi);
-        }, 300);
       });
 
       // Mesma lógica do documento principal: fecha o popup de Grifar/Citar
@@ -642,7 +601,6 @@ const Leitor = (() => {
     });
 
     rendition.on('relocated', (location) => {
-      console.log('[DIAG-EPUB-RELOCATED]', location.start.cfi, 'página', location.start.displayed);
       atualizarProgresso(location);
       salvarPosicaoAtual(location.start.cfi);
       sincronizarProgresso(location);
@@ -1036,7 +994,6 @@ const Leitor = (() => {
     }).catch(console.warn);
 
     rendition.on('relocated', (location) => {
-      console.log('[DIAG-EPUB-RELOCATED]', location.start.cfi, 'página', location.start.displayed);
       atualizarProgresso(location);
       salvarPosicaoAtual(location.start.cfi);
       sincronizarProgresso(location);
