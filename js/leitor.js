@@ -432,6 +432,8 @@ const Leitor = (() => {
     if (rendition.__tapNavHookRegistrado) return;
     rendition.__tapNavHookRegistrado = true;
 
+    let ultimoToqueEpubTs = 0;
+
     rendition.hooks.content.register((contents) => {
       const doc = contents && contents.document;
       if (!doc || doc.__tapNavConfigurado) return;
@@ -443,7 +445,24 @@ const Leitor = (() => {
 
         if (config.modoRolagem === 'continuo') return;
 
-        const largura = doc.documentElement ? doc.documentElement.clientWidth : 0;
+        // Trava simples: ignora um segundo clique/toque disparado logo em
+        // seguida do anterior (ex.: touchend + click sintético do navegador
+        // para o mesmo gesto), que era a causa de "clico e avança, clico no
+        // mesmo lugar e volta" — o mesmo toque acabava virando a página
+        // duas vezes, uma em cada sentido.
+        const agora = Date.now();
+        if (agora - ultimoToqueEpubTs < 500) return;
+        ultimoToqueEpubTs = agora;
+
+        // Medir a largura pelo elemento <iframe> visto de fora (documento
+        // pai) é mais confiável do que medir de dentro do próprio conteúdo:
+        // o epub.js pode alterar margens/colunas internas entre uma página
+        // e outra, o que fazia o mesmo ponto da tela cair em zonas
+        // diferentes dependendo da página exibida.
+        const iframeEl = els.container ? els.container.querySelector('#leitor-conteudo iframe') : null;
+        const largura = iframeEl
+          ? iframeEl.getBoundingClientRect().width
+          : (doc.documentElement ? doc.documentElement.clientWidth : 0);
         if (!largura) return;
         const proporcao = e.clientX / largura;
 
