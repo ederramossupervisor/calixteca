@@ -162,6 +162,7 @@ const Leitura = (() => {
     // Localização: preenche sugestões de locais já conhecidos e liga o botão de GPS
     carregarLocaisConhecidos();
     document.getElementById('btn-local-gps')?.addEventListener('click', usarLocalizacaoAtual);
+    sugerirLocalPorGPS();
 
     // Configurar Media Session para controles na tela de bloqueio
     configurarMediaSession();
@@ -494,6 +495,72 @@ const Leitura = (() => {
     } catch (e) {
       console.error('Erro ao carregar locais conhecidos:', e);
     }
+  }
+
+  // Distância aproximada entre duas coordenadas, em metros (fórmula de
+  // Haversine). Usada só pra achar o local salvo mais próximo — não precisa
+  // de precisão geodésica de verdade, só de "qual está mais perto".
+  function distanciaEmMetros(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const toRad = (graus) => (graus * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // Ao abrir a tela, sugere sozinho o campo "Local" comparando a posição
+  // atual do GPS com as coordenadas já salvas (as mesmas usadas no Mapa).
+  // Só preenche se: o campo ainda está vazio (não atropela o que o usuário
+  // já digitou), não é uma edição de sessão existente, e algum local salvo
+  // está a menos de 150m — fora isso, fica quieto e o usuário digita normal.
+  const RAIO_SUGESTAO_METROS = 150;
+
+  async function sugerirLocalPorGPS() {
+    const inputLocal = document.getElementById('local-sessao');
+    const status = document.getElementById('local-gps-status');
+    if (!inputLocal || inputLocal.value.trim() || editandoSessaoID) return;
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (posicao) => {
+        try {
+          // Reaproveita o cache de 45s do api.js quando possível (getConfigs
+          // é uma ação cacheável) — não gera round-trip extra na maioria dos casos.
+          const configs = await API.enviar({ acao: 'getConfigs' });
+          if (!configs) return;
+
+          const lat = posicao.coords.latitude;
+          const lng = posicao.coords.longitude;
+
+          let melhorNome = null;
+          let melhorDistancia = Infinity;
+
+          Object.keys(configs)
+            .filter(chave => chave.startsWith('local_coord_'))
+            .forEach(chave => {
+              const [latSalva, lngSalva] = String(configs[chave]).split(',').map(Number);
+              if (isNaN(latSalva) || isNaN(lngSalva)) return;
+              const dist = distanciaEmMetros(lat, lng, latSalva, lngSalva);
+              if (dist < melhorDistancia) {
+                melhorDistancia = dist;
+                melhorNome = chave.replace('local_coord_', '').replace(/_/g, ' ');
+              }
+            });
+
+          if (melhorNome && melhorDistancia <= RAIO_SUGESTAO_METROS && !inputLocal.value.trim()) {
+            inputLocal.value = melhorNome;
+            if (status) status.textContent = `📍 Local sugerido automaticamente (você pode alterar)`;
+          }
+        } catch (e) {
+          console.warn('Não foi possível sugerir local por GPS:', e);
+        }
+      },
+      () => { /* permissão negada ou indisponível — fica quieto, sem toast */ },
+      { timeout: 8000, maximumAge: 300000 }
+    );
   }
 
   // Captura a localização atual pelo GPS/rede do dispositivo e salva a
