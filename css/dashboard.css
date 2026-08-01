@@ -2,6 +2,10 @@
 #livro-atual-card {
   background: var(--bg-card);
   border-radius: var(--radius);
+  /* --capa-cor é setada via JS (dashboard.js) com a cor média extraída da
+     capa do livro atual; some sozinha (fica transparent) sem livro/capa. */
+  background-image: linear-gradient(135deg, var(--capa-cor, transparent) 0%, transparent 60%);
+  transition: background-image 0.6s ease;
 }
 #livro-atual-capa img {
   width: 50px;
@@ -29,4 +33,28 @@
 }
 .dashboard-card:hover {
   transform: translateY(-2px);
+}
+
+/* Mini-heatmap do Dashboard — mesma linguagem visual do heatmap de
+   Estatísticas (ver estatisticas.css), só que compacto e sem rolagem,
+   com uma célula por dia dos últimos ~70 dias. */
+#mini-heatmap-container {
+  width: 100%;
+  padding: 4px 0;
+}
+#mini-heatmap-container .heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 11px;
+  gap: 3px;
+  width: 100%;
+}
+#mini-heatmap-container .heatmap-cell {
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+#mini-heatmap-container .heatmap-cell:hover {
+  transform: scale(1.3);
+  z-index: 2;
 }
