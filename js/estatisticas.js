@@ -412,6 +412,16 @@ const Estatisticas = (() => {
     const wrapper = document.createElement('div');
     wrapper.className = 'heatmap-wrapper';
 
+    // Tamanho da célula calculado a partir da largura disponível do card,
+    // não um valor fixo — largura e altura saem iguais, então a célula é
+    // um quadrado de verdade (antes a largura esticava pra 1fr e a altura
+    // ficava fixa em 13px, o que dava um retângulo bem baixo e largo — a
+    // "barra horizontal" em vez de quadradinho).
+    const GAP = 3;
+    const larguraDisponivel = container.clientWidth || 280;
+    const tamanhoCelula = Math.max(8, Math.min(16, Math.floor((larguraDisponivel - GAP * 6) / 7)));
+    wrapper.style.setProperty('--heatmap-cell-size', `${tamanhoCelula}px`);
+
     const labels = document.createElement('div');
     labels.className = 'heatmap-weekday-labels';
     ['', 'Seg', '', 'Qua', '', 'Sex', ''].forEach(txt => {
@@ -444,14 +454,6 @@ const Estatisticas = (() => {
     wrapper.appendChild(labels);
     wrapper.appendChild(grid);
     container.appendChild(wrapper);
-
-    // Ano corrente: rola até o fim (dezembro/mais recente) por padrão.
-    // Anos passados: mantém no topo (janeiro), que é o ponto natural de
-    // partida pra revisar um ano fechado.
-    const anoCorrente = new Date().getFullYear();
-    if (anoSelecionado === anoCorrente) {
-      requestAnimationFrame(() => { wrapper.scrollTop = wrapper.scrollHeight; });
-    }
   }
 
   function getHeatColor(intensidade) {
