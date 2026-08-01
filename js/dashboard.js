@@ -107,6 +107,13 @@ const Dashboard = (() => {
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
 
+    // Mesmo ajuste do heatmap de Estatísticas: tamanho de célula calculado
+    // pela largura disponível, não esticado — fica quadrado de verdade.
+    const GAP = 3;
+    const larguraDisponivel = container.clientWidth || 280;
+    const tamanhoCelula = Math.max(8, Math.min(16, Math.floor((larguraDisponivel - GAP * 6) / 7)));
+    container.style.setProperty('--mini-heatmap-cell-size', `${tamanhoCelula}px`);
+
     // Alinha o primeiro dia na coluna certa do dia da semana (0 = Domingo).
     const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
     for (let i = 0; i < primeiroDiaSemana; i++) {
