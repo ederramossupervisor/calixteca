@@ -1,6 +1,11 @@
 const API = (() => {
   const BASE_URL = 'https://script.google.com/macros/s/AKfycbxeC5orW_66rJp8nwCSvIFZZBMVwq867BVuhby-i5LWHd3qYgT4ghAgrcArUrji7mdvjA/exec';
 
+  // Token de autorização enviado em toda chamada — precisa ser IDÊNTICO ao
+  // valor gravado no Code.gs via PropertiesService (função definirTokenApp).
+  // Troque o valor abaixo pela mesma senha longa e única usada lá.
+  const APP_TOKEN = 'Ecr@supervisor';
+
   // Ações somente-leitura: seguras para reaproveitar respostas recentes em
   // memória. Qualquer ação fora desta lista é tratada como mutação e limpa
   // o cache inteiro após concluir com sucesso.
@@ -61,7 +66,8 @@ const API = (() => {
   async function executar(dados, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const params = new URLSearchParams({ data: JSON.stringify(dados) });
+    const dadosComToken = { ...dados, token: APP_TOKEN };
+    const params = new URLSearchParams({ data: JSON.stringify(dadosComToken) });
     const url = `${BASE_URL}?${params.toString()}`;
 
     pendentes++;
