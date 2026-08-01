@@ -65,6 +65,46 @@ const Util = {
       return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
     }
     return url;
+  },
+
+  // Extrai a cor média de uma imagem (capa de livro) desenhando ela num
+  // canvas pequeno e tirando a média dos pixels — ignora quase-branco/
+  // quase-preto (bordas/sombra) pra pegar uma cor mais representativa da
+  // capa em si. Resolve com "r, g, b" (pra usar em rgba(...)) ou null se a
+  // imagem não puder ser lida (ex.: sem CORS liberado pelo servidor da
+  // imagem — falha silenciosa, não deve quebrar a tela).
+  extrairCorMedia: function(urlImagem) {
+    return new Promise((resolve) => {
+      if (!urlImagem) { resolve(null); return; }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const tamanho = 40;
+          const canvas = document.createElement('canvas');
+          canvas.width = tamanho;
+          canvas.height = tamanho;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, tamanho, tamanho);
+          const dados = ctx.getImageData(0, 0, tamanho, tamanho).data;
+
+          let r = 0, g = 0, b = 0, total = 0;
+          for (let i = 0; i < dados.length; i += 4) {
+            if (dados[i + 3] < 100) continue; // ignora pixels transparentes
+            const luminosidade = (dados[i] + dados[i + 1] + dados[i + 2]) / 3;
+            if (luminosidade > 245 || luminosidade < 10) continue; // ignora quase-branco/quase-preto
+            r += dados[i]; g += dados[i + 1]; b += dados[i + 2];
+            total++;
+          }
+          if (total === 0) { resolve(null); return; }
+          resolve(`${Math.round(r / total)}, ${Math.round(g / total)}, ${Math.round(b / total)}`);
+        } catch (e) {
+          resolve(null); // canvas "manchado" por CORS — desiste sem quebrar a tela
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = urlImagem;
+    });
   }
 };
 
