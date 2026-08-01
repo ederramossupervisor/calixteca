@@ -239,6 +239,14 @@
           </div>
         </div>
 
+        <!-- Mini-heatmap: últimos ~70 dias de leitura -->
+        <div class="card mt-3 shadow-sm">
+          <div class="card-body">
+            <h5>Consistência recente</h5>
+            <div id="mini-heatmap-container"></div>
+          </div>
+        </div>
+
         <!-- Meta -->
         <div class="card mt-3 shadow-sm">
           <div class="card-body">
@@ -1105,10 +1113,14 @@
         <div class="row g-3 mb-4" id="progresso-container">
           <div class="col-md-6">
             <div class="card shadow-sm">
-              <div class="card-body">
+              <div class="card-body text-center">
                 <h5>Progresso anual de livros</h5>
-                <div class="progress mb-2">
-                  <div class="progress-bar bg-success" id="prog-livros" role="progressbar" style="width:0%">0%</div>
+                <div class="progress-ring-wrapper mx-auto">
+                  <svg class="progress-ring" viewBox="0 0 120 120">
+                    <circle class="progress-ring-bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress-ring-fill ring-livros" id="prog-livros" cx="60" cy="60" r="52"></circle>
+                  </svg>
+                  <div class="progress-ring-label" id="prog-livros-label">0%</div>
                 </div>
                 <span id="texto-prog-livros">0 de 0 livros</span>
               </div>
@@ -1116,10 +1128,14 @@
           </div>
           <div class="col-md-6">
             <div class="card shadow-sm">
-              <div class="card-body">
+              <div class="card-body text-center">
                 <h5>Progresso anual de páginas</h5>
-                <div class="progress mb-2">
-                  <div class="progress-bar bg-info" id="prog-paginas" role="progressbar" style="width:0%">0%</div>
+                <div class="progress-ring-wrapper mx-auto">
+                  <svg class="progress-ring" viewBox="0 0 120 120">
+                    <circle class="progress-ring-bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress-ring-fill ring-paginas" id="prog-paginas" cx="60" cy="60" r="52"></circle>
+                  </svg>
+                  <div class="progress-ring-label" id="prog-paginas-label">0%</div>
                 </div>
                 <span id="texto-prog-paginas">0 de 0 páginas</span>
               </div>
@@ -1135,10 +1151,14 @@
           </div>
           <div class="col-md-12" id="card-prog-sequencia" style="display:none;">
             <div class="card shadow-sm">
-              <div class="card-body">
+              <div class="card-body text-center">
                 <h5><i class="fas fa-fire text-orange me-1"></i>Sequência de dias</h5>
-                <div class="progress mb-2">
-                  <div class="progress-bar bg-warning" id="prog-sequencia" role="progressbar" style="width:0%">0%</div>
+                <div class="progress-ring-wrapper mx-auto">
+                  <svg class="progress-ring" viewBox="0 0 120 120">
+                    <circle class="progress-ring-bg" cx="60" cy="60" r="52"></circle>
+                    <circle class="progress-ring-fill ring-sequencia" id="prog-sequencia" cx="60" cy="60" r="52"></circle>
+                  </svg>
+                  <div class="progress-ring-label" id="prog-sequencia-label">0%</div>
                 </div>
                 <span id="texto-prog-sequencia">0 de 0 dias (recorde)</span>
                 <br><small class="text-muted" id="texto-sequencia-atual"></small>
