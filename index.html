@@ -790,6 +790,25 @@
       </div>
     </div>
 
+    <!-- Mapa de calor de leitura (linha inteira) -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header fw-bold"><i class="fas fa-fire me-2"></i>Mapa de calor de leitura <span id="titulo-ano-heatmap"></span></div>
+      <div class="card-body">
+        <div id="heatmap-container"></div>
+        <div class="d-flex justify-content-center mt-2">
+          <small class="me-2">Menos</small>
+          <div class="d-flex gap-1 align-items-center">
+            <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
+            <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
+            <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
+            <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
+            <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
+          </div>
+          <small class="ms-2">Mais</small>
+        </div>
+      </div>
+    </div>
+
     <!-- Insights gerais -->
     <div class="card mb-4 shadow-sm">
       <div class="card-header fw-bold"><i class="fas fa-lightbulb text-warning me-2"></i>Percepções</div>
@@ -836,7 +855,7 @@
     </div>
   </div>
 
-  <!-- Linha 3 (Evolução da Velocidade + Mapa de Calor) -->
+  <!-- Linha 3 (Evolução da Velocidade + Insights Avançados, lado a lado) -->
   <div class="col-md-6">
     <div class="card shadow-sm h-100">
       <div class="card-header fw-bold"><i class="fas fa-gauge-high me-2"></i>Evolução da Velocidade (páginas/hora) <span id="titulo-ano-velocidade"></span></div>
@@ -845,99 +864,35 @@
       </div>
     </div>
   </div>
-<div class="col-md-6">
-  <div class="card shadow-sm h-100">
-    <div class="card-header fw-bold"><i class="fas fa-fire me-2"></i>Mapa de calor de leitura <span id="titulo-ano-heatmap"></span></div>
-    <div class="card-body">
-      <div id="heatmap-container"></div>
-      <div class="d-flex justify-content-center mt-2">
-        <small class="me-2">Menos</small>
-        <div class="d-flex gap-1 align-items-center">
-          <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
-        </div>
-        <small class="ms-2">Mais</small>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-bold">
+        <i class="fas fa-brain me-2"></i>Insights Avançados (Hábitos de Leitura)
       </div>
-    </div>
-  </div>
-</div>
+      <div class="card-body">
+        <!-- Mensagens textuais -->
+        <ul class="list-group list-group-flush mb-4" id="insights-avancados-list">
+          <li class="list-group-item text-muted">Carregando insights personalizados...</li>
+        </ul>
 
-    <!-- Top Autores e Editoras (2 colunas, lado a lado) -->
-    <div class="row g-3 mt-3">
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-header fw-bold"><i class="fas fa-feather-pointed me-2"></i>Top Autores</div>
-          <div class="card-body">
-            <ul class="list-group" id="top-autores"></ul>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card shadow-sm">
-          <div class="card-header fw-bold"><i class="fas fa-building me-2"></i>Top Editoras</div>
-          <div class="card-body">
-            <ul class="list-group" id="top-editoras"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
+        <!-- Abas: antes tudo (4 gráficos + 7 tabelas) ficava empilhado num
+             scroll só; agora cada recorte de dados fica na sua aba -->
+        <ul class="nav nav-tabs mb-3" id="tabs-insights-avancados" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-btn-velocidade" data-bs-toggle="tab" data-bs-target="#tab-velocidade" type="button" role="tab">Velocidade</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-humor-clima" data-bs-toggle="tab" data-bs-target="#tab-humor-clima" type="button" role="tab">Humor &amp; Clima</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-locais-generos" data-bs-toggle="tab" data-bs-target="#tab-locais-generos" type="button" role="tab">Locais &amp; Gêneros</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-anotacoes" data-bs-toggle="tab" data-bs-target="#tab-anotacoes" type="button" role="tab">Anotações</button>
+          </li>
+        </ul>
 
-    <!-- Calendário de Leitura (linha inteira) -->
-    <div class="col-12 mt-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fa-solid fa-calendar-days"></i> Calendário de Leitura</h5>
-            <div>
-              <button id="calendario-mes-anterior" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
-              <span id="calendario-mes-ano" class="mx-2 fw-bold"></span>
-              <button id="calendario-mes-proximo" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
-              <button id="btn-compartilhar-calendario" class="btn btn-sm btn-outline-primary ms-2" title="Baixar imagem do calendário"><i class="fas fa-camera"></i></button>
-            </div>
-          </div>
-          <div class="row row-cols-7 text-center fw-bold small mb-2" style="color: var(--text-secondary);">
-            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-          </div>
-          <div id="calendario-grid" class="row row-cols-7 g-1">
-            <!-- Preenchido dinamicamente -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- INSIGHTS AVANÇADOS (com gráficos de velocidade em 3 colunas) -->
-    <div class="col-12 mt-4">
-      <div class="card shadow-sm">
-        <div class="card-header fw-bold">
-          <i class="fas fa-brain me-2"></i>Insights Avançados (Hábitos de Leitura)
-        </div>
-        <div class="card-body">
-          <!-- Mensagens textuais -->
-          <ul class="list-group list-group-flush mb-4" id="insights-avancados-list">
-            <li class="list-group-item text-muted">Carregando insights personalizados...</li>
-          </ul>
-
-          <!-- Abas: antes tudo (4 gráficos + 7 tabelas) ficava empilhado num
-               scroll só; agora cada recorte de dados fica na sua aba -->
-          <ul class="nav nav-tabs mb-3" id="tabs-insights-avancados" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="tab-btn-velocidade" data-bs-toggle="tab" data-bs-target="#tab-velocidade" type="button" role="tab">Velocidade</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tab-btn-humor-clima" data-bs-toggle="tab" data-bs-target="#tab-humor-clima" type="button" role="tab">Humor &amp; Clima</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tab-btn-locais-generos" data-bs-toggle="tab" data-bs-target="#tab-locais-generos" type="button" role="tab">Locais &amp; Gêneros</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tab-btn-anotacoes" data-bs-toggle="tab" data-bs-target="#tab-anotacoes" type="button" role="tab">Anotações</button>
-            </li>
-          </ul>
-
-          <div class="tab-content" id="conteudo-insights-avancados">
+        <div class="tab-content" id="conteudo-insights-avancados">
             <!-- Aba: Velocidade -->
             <div class="tab-pane fade show active" id="tab-velocidade" role="tabpanel">
               <div class="row g-3">
@@ -1040,10 +995,54 @@
                 </div>
               </div>
             </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Top Autores e Editoras (2 colunas, lado a lado) -->
+    <div class="row g-3 mt-3">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header fw-bold"><i class="fas fa-feather-pointed me-2"></i>Top Autores</div>
+          <div class="card-body">
+            <ul class="list-group" id="top-autores"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header fw-bold"><i class="fas fa-building me-2"></i>Top Editoras</div>
+          <div class="card-body">
+            <ul class="list-group" id="top-editoras"></ul>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Calendário de Leitura (linha inteira) -->
+    <div class="col-12 mt-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fa-solid fa-calendar-days"></i> Calendário de Leitura</h5>
+            <div>
+              <button id="calendario-mes-anterior" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-left"></i></button>
+              <span id="calendario-mes-ano" class="mx-2 fw-bold"></span>
+              <button id="calendario-mes-proximo" class="btn btn-sm btn-outline-secondary"><i class="fas fa-chevron-right"></i></button>
+              <button id="btn-compartilhar-calendario" class="btn btn-sm btn-outline-primary ms-2" title="Baixar imagem do calendário"><i class="fas fa-camera"></i></button>
+            </div>
+          </div>
+          <div class="row row-cols-7 text-center fw-bold small mb-2" style="color: var(--text-secondary);">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div id="calendario-grid" class="row row-cols-7 g-1">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Mapa de Locais de Leitura -->
     <div class="col-12 mt-4">
