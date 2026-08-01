@@ -53,6 +53,78 @@ const Dashboard = (() => {
         Util.toast('Sem conexão e nenhum dado em cache.', 'danger');
       }
     }
+
+    // Mini-heatmap dos últimos ~70 dias — busca à parte, sem atrasar/quebrar
+    // o resto do Dashboard se falhar (mesmo padrão do Insights Avançados em
+    // Estatísticas). Requer a ação 'heatmapRecente' no Code.gs.
+    carregarMiniHeatmap();
+  }
+
+  async function carregarMiniHeatmap() {
+    const container = document.getElementById('mini-heatmap-container');
+    if (!container) return;
+    try {
+      const dias = await API.enviar({ acao: 'heatmapRecente', dias: 70 });
+      if (Array.isArray(dias)) renderizarMiniHeatmap(dias);
+    } catch (e) {
+      console.warn('Falha ao carregar mini-heatmap:', e);
+    }
+  }
+
+  function renderizarMiniHeatmap(dias) {
+    const container = document.getElementById('mini-heatmap-container');
+    if (!container || !dias || !dias.length) return;
+    container.innerHTML = '';
+
+    const maxPag = Math.max(...dias.map(d => d.paginas), 1);
+
+    function parseDataLocal(iso) {
+      const [ano, mes, dia] = iso.split('-').map(Number);
+      return new Date(ano, mes - 1, dia); // evita o "dia -1" do parse em UTC
+    }
+    function formatarDataBrasileira(iso) {
+      const partes = iso.split('-');
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    function temaEscuro() {
+      return document.body.classList.contains('dark-mode');
+    }
+    function corCelula(intensidade) {
+      if (temaEscuro()) {
+        if (intensidade === 0) return '#2A2820';
+        if (intensidade < 0.25) return '#3D4739';
+        if (intensidade < 0.5) return '#526350';
+        if (intensidade < 0.75) return '#6E8266';
+        return '#9DAE96';
+      }
+      if (intensidade === 0) return '#EDEAE2';
+      if (intensidade < 0.25) return '#C9D2C4';
+      if (intensidade < 0.5) return '#9DAE96';
+      if (intensidade < 0.75) return '#6E8266';
+      return '#46543F';
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'heatmap-grid';
+
+    // Alinha o primeiro dia na coluna certa do dia da semana (0 = Domingo).
+    const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+      const vazio = document.createElement('div');
+      vazio.className = 'heatmap-cell heatmap-cell-vazia';
+      grid.appendChild(vazio);
+    }
+
+    dias.forEach(dia => {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      const intensidade = dia.paginas / maxPag;
+      cell.style.backgroundColor = corCelula(intensidade);
+      cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
+      grid.appendChild(cell);
+    });
+
+    container.appendChild(grid);
   }
 
   function mostrarSkeletons() {
@@ -157,6 +229,19 @@ const Dashboard = (() => {
           : '';
       }
 
+      // Cor dinâmica extraída da capa (ver Util.extrairCorMedia) — aplica no
+      // card via CSS custom property; se a imagem não puder ser lida (ex.:
+      // CORS), simplesmente não colore nada, sem quebrar a tela.
+      if (livro.urlCapa) {
+        Util.extrairCorMedia(livro.urlCapa).then(cor => {
+          if (containerCard) {
+            containerCard.style.setProperty('--capa-cor', cor ? `rgba(${cor}, 0.18)` : 'transparent');
+          }
+        });
+      } else if (containerCard) {
+        containerCard.style.setProperty('--capa-cor', 'transparent');
+      }
+
       // Previsão de data (individual)
       if (previsaoEl) {
         if (livro.previsaoTermino) {
@@ -203,6 +288,7 @@ const Dashboard = (() => {
       if (capaEl) capaEl.innerHTML = '';
       if (previsaoEl) previsaoEl.classList.add('d-none');
       if (tempoRestEl) tempoRestEl.classList.add('d-none');
+      if (containerCard) containerCard.style.setProperty('--capa-cor', 'transparent');
     }
   }
 
