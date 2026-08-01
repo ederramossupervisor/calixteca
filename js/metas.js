@@ -81,15 +81,11 @@ const Metas = (() => {
     document.getElementById('meta-diaria').value = meta.metaDiaria || 0;
     document.getElementById('meta-sequencia').value = meta.metaSequenciaDias || 0;
 
-    const progLivros = document.getElementById('prog-livros');
-    progLivros.style.width = prog.percentualLivros + '%';
-    progLivros.textContent = prog.percentualLivros + '%';
+    atualizarAnel('prog-livros', 'prog-livros-label', prog.percentualLivros);
     document.getElementById('texto-prog-livros').textContent =
       `${prog.livrosFinalizados} de ${meta.metaLivros} livros`;
 
-    const progPaginas = document.getElementById('prog-paginas');
-    progPaginas.style.width = prog.percentualPaginas + '%';
-    progPaginas.textContent = prog.percentualPaginas + '%';
+    atualizarAnel('prog-paginas', 'prog-paginas-label', prog.percentualPaginas);
     document.getElementById('texto-prog-paginas').textContent =
       `${prog.paginasLidasAno.toLocaleString('pt-BR')} de ${meta.metaPaginas.toLocaleString('pt-BR')} páginas`;
 
@@ -102,10 +98,8 @@ const Metas = (() => {
     const cardSequencia = document.getElementById('card-prog-sequencia');
     if (meta.metaSequenciaDias > 0 && prog.maiorSequencia !== undefined) {
       cardSequencia.style.display = '';
-      const progSeq = document.getElementById('prog-sequencia');
       const pct = prog.percentualSequencia || 0;
-      progSeq.style.width = pct + '%';
-      progSeq.textContent = pct + '%';
+      atualizarAnel('prog-sequencia', 'prog-sequencia-label', pct);
       document.getElementById('texto-prog-sequencia').textContent =
         `${prog.maiorSequencia} de ${meta.metaSequenciaDias} dias (recorde)`;
       document.getElementById('texto-sequencia-atual').textContent =
@@ -113,6 +107,22 @@ const Metas = (() => {
     } else {
       cardSequencia.style.display = 'none';
     }
+  }
+
+  // Atualiza um anel de progresso circular (SVG <circle>) via
+  // stroke-dasharray/stroke-dashoffset, e escreve a porcentagem no label
+  // central sobreposto. idCirculo é o <circle class="progress-ring-fill">;
+  // idLabel é o <div class="progress-ring-label"> por cima dele.
+  function atualizarAnel(idCirculo, idLabel, percentual) {
+    const circulo = document.getElementById(idCirculo);
+    const label = document.getElementById(idLabel);
+    if (!circulo) return;
+    const raio = circulo.r.baseVal.value;
+    const circunferencia = 2 * Math.PI * raio;
+    const pct = Math.max(0, Math.min(100, percentual || 0));
+    circulo.style.strokeDasharray = `${circunferencia} ${circunferencia}`;
+    circulo.style.strokeDashoffset = circunferencia * (1 - pct / 100);
+    if (label) label.textContent = pct + '%';
   }
 
   async function carregarConquistas() {
