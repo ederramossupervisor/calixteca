@@ -384,74 +384,107 @@ const Estatisticas = (() => {
     });
   }
 
-  // Heatmap no formato "calendário de contribuições", agora rotacionado:
-  // 7 colunas fixas (dias da semana, Dom-Sáb) e semanas crescendo pra baixo,
-  // em vez de colunas de semana crescendo pros lados. Isso evita a barra de
-  // rolagem horizontal — o card só cresce em altura (limitada por
-  // max-height + overflow-y no CSS), nunca em largura.
+  // Heatmap circular: um anel por mês (Jan por fora, Dez por dentro), cada
+  // dia é um setor anelar colorido pela intensidade de leitura. Substitui o
+  // formato antigo em grade (dias da semana em colunas).
+  const NS_SVG = 'http://www.w3.org/2000/svg';
+  const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  function diasNoMes(ano, mes) {
+    return new Date(ano, mes, 0).getDate(); // mes 1-12
+  }
+
+  function polarParaCartesiano(cx, cy, raio, anguloGraus) {
+    const anguloRad = anguloGraus * Math.PI / 180;
+    // ângulo 0 = topo (12h), crescendo em sentido horário
+    return { x: cx + raio * Math.sin(anguloRad), y: cy - raio * Math.cos(anguloRad) };
+  }
+
+  function caminhoSetorAnelar(cx, cy, rInterno, rExterno, anguloInicial, anguloFinal) {
+    const p1 = polarParaCartesiano(cx, cy, rExterno, anguloInicial);
+    const p2 = polarParaCartesiano(cx, cy, rExterno, anguloFinal);
+    const p3 = polarParaCartesiano(cx, cy, rInterno, anguloFinal);
+    const p4 = polarParaCartesiano(cx, cy, rInterno, anguloInicial);
+    const largeArc = (anguloFinal - anguloInicial) > 180 ? 1 : 0;
+    return `M ${p1.x} ${p1.y} A ${rExterno} ${rExterno} 0 ${largeArc} 1 ${p2.x} ${p2.y} ` +
+           `L ${p3.x} ${p3.y} A ${rInterno} ${rInterno} 0 ${largeArc} 0 ${p4.x} ${p4.y} Z`;
+  }
+
   function criarHeatmap(heatmapData) {
     const container = document.getElementById('heatmap-container');
     if (!container) return;
     container.innerHTML = '';
     if (!heatmapData || !heatmapData.length) return;
 
-    // Backend já manda em ordem cronológica ascendente (mais antigo primeiro)
-    // dentro do ano selecionado.
-    const dias = heatmapData;
-    const maxPag = Math.max(...dias.map(d => d.paginas), 1);
+    const mapaPaginas = {};
+    heatmapData.forEach(d => { mapaPaginas[d.data] = d.paginas; });
+    const maxPag = Math.max(...heatmapData.map(d => d.paginas), 1);
 
-    function parseDataLocal(iso) {
-      const [ano, mes, dia] = iso.split('-').map(Number);
-      return new Date(ano, mes - 1, dia); // evita o "dia -1" do parse em UTC
-    }
     function formatarDataBrasileira(iso) {
       const partes = iso.split('-');
       return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'heatmap-wrapper';
+    const tamanho = 520;
+    const cx = tamanho / 2, cy = tamanho / 2;
+    const raioMax = 236;
+    const raioMinimo = 36; // "buraco" central onde fica o rótulo do ano
+    const espacoEntreAneis = 2;
+    const espessuraAnel = (raioMax - raioMinimo) / 12 - espacoEntreAneis;
 
-    const labels = document.createElement('div');
-    labels.className = 'heatmap-weekday-labels';
-    ['', 'Seg', '', 'Qua', '', 'Sex', ''].forEach(txt => {
-      const span = document.createElement('span');
-      span.textContent = txt;
-      labels.appendChild(span);
-    });
+    const svg = document.createElementNS(NS_SVG, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${tamanho} ${tamanho}`);
+    svg.setAttribute('class', 'heatmap-circular-svg');
 
-    const grid = document.createElement('div');
-    grid.className = 'heatmap-grid';
+    for (let mes = 1; mes <= 12; mes++) {
+      const i = mes - 1;
+      const rExterno = raioMax - i * (espessuraAnel + espacoEntreAneis);
+      const rInterno = rExterno - espessuraAnel;
+      const totalDias = diasNoMes(anoSelecionado, mes);
+      const anguloPorDia = 360 / totalDias;
 
-    // Preenche células vazias no início pra alinhar o primeiro dia real na
-    // coluna certa (0 = Domingo, primeira coluna).
-    const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
-    for (let i = 0; i < primeiroDiaSemana; i++) {
-      const vazio = document.createElement('div');
-      vazio.className = 'heatmap-cell heatmap-cell-vazia';
-      grid.appendChild(vazio);
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const iso = `${anoSelecionado}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const paginas = mapaPaginas[iso] || 0;
+        const intensidade = paginas / maxPag;
+        const anguloInicial = (dia - 1) * anguloPorDia;
+        const anguloFinal = dia * anguloPorDia - anguloPorDia * 0.12; // folga entre dias
+
+        const path = document.createElementNS(NS_SVG, 'path');
+        path.setAttribute('d', caminhoSetorAnelar(cx, cy, rInterno, rExterno, anguloInicial, anguloFinal));
+        path.setAttribute('fill', getHeatColor(intensidade));
+        path.setAttribute('class', 'heatmap-setor-dia');
+
+        const title = document.createElementNS(NS_SVG, 'title');
+        title.textContent = `${formatarDataBrasileira(iso)}: ${paginas} página${paginas === 1 ? '' : 's'}`;
+        path.appendChild(title);
+
+        svg.appendChild(path);
+      }
+
+      // Rótulo do mês, um pouco antes do topo do anel (evita colar no dia 1)
+      const rotuloRaio = (rExterno + rInterno) / 2;
+      const posRotulo = polarParaCartesiano(cx, cy, rotuloRaio, -4);
+      const texto = document.createElementNS(NS_SVG, 'text');
+      texto.setAttribute('x', posRotulo.x);
+      texto.setAttribute('y', posRotulo.y);
+      texto.setAttribute('text-anchor', 'end');
+      texto.setAttribute('dominant-baseline', 'middle');
+      texto.setAttribute('class', 'heatmap-rotulo-mes');
+      texto.textContent = MESES_ABREV[i];
+      svg.appendChild(texto);
     }
 
-    dias.forEach(dia => {
-      const cell = document.createElement('div');
-      cell.className = 'heatmap-cell';
-      const intensidade = dia.paginas / maxPag;
-      cell.style.backgroundColor = getHeatColor(intensidade);
-      cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
-      grid.appendChild(cell);
-    });
+    const anoTexto = document.createElementNS(NS_SVG, 'text');
+    anoTexto.setAttribute('x', cx);
+    anoTexto.setAttribute('y', cy);
+    anoTexto.setAttribute('text-anchor', 'middle');
+    anoTexto.setAttribute('dominant-baseline', 'middle');
+    anoTexto.setAttribute('class', 'heatmap-rotulo-ano');
+    anoTexto.textContent = anoSelecionado;
+    svg.appendChild(anoTexto);
 
-    wrapper.appendChild(labels);
-    wrapper.appendChild(grid);
-    container.appendChild(wrapper);
-
-    // Ano corrente: rola até o fim (dezembro/mais recente) por padrão.
-    // Anos passados: mantém no topo (janeiro), que é o ponto natural de
-    // partida pra revisar um ano fechado.
-    const anoCorrente = new Date().getFullYear();
-    if (anoSelecionado === anoCorrente) {
-      requestAnimationFrame(() => { wrapper.scrollTop = wrapper.scrollHeight; });
-    }
+    container.appendChild(svg);
   }
 
   function getHeatColor(intensidade) {
