@@ -66,6 +66,17 @@ function activatePageGlobal(pageName) {
     }
   });
 
+  // Reflete a página atual no botão do menu suspenso da sidebar (desktop):
+  // copia o ícone e o texto do item correspondente dentro do dropdown.
+  const itemAtivoSidebar = document.querySelector(`#sidebarMenuList .nav-link[data-page="${pageName}"]`);
+  if (itemAtivoSidebar) {
+    const icone = itemAtivoSidebar.querySelector('i');
+    const iconeBtn = document.getElementById('sidebar-menu-icone');
+    const labelBtn = document.getElementById('sidebar-menu-label');
+    if (icone && iconeBtn) iconeBtn.className = icone.className;
+    if (labelBtn) labelBtn.textContent = itemAtivoSidebar.textContent.trim();
+  }
+
   // Mostra/oculta páginas
   const pages = document.querySelectorAll('.page');
   pages.forEach(page => {
