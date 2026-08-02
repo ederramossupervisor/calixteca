@@ -48,13 +48,6 @@ body.app-loaded #splash-screen {
   /* Retiramos o overflow daqui para não rolar a logo/rodapé */
 }
 
-/* Faz apenas a lista de links da sidebar rolar se a tela for pequena */
-.sidebar nav {
-  flex: 1;
-  overflow-y: auto;
-  flex-wrap: nowrap;
-}
-
 .sidebar .nav-link {
   color: var(--text-secondary);
   padding: 10px 15px;
@@ -62,15 +55,24 @@ body.app-loaded #splash-screen {
   margin-bottom: 2px;
 }
 
-/* Afasta um pouco o último link (Configurações) para não grudar no botão de tema */
-.sidebar nav .nav-link:last-child {
-  margin-bottom: 15px;
+.sidebar .dropdown-menu .nav-link:last-child {
+  margin-bottom: 0;
 }
 
 .sidebar .nav-link.active,
 .sidebar .nav-link:hover {
   background-color: var(--primary);
   color: #fff;
+}
+
+/* Botão do dropdown da sidebar — mesma paleta dos links */
+.sidebar #sidebarMenuBtn {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+.sidebar .dropdown-menu {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
 }
 /* ========================================= */
 
