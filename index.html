@@ -139,15 +139,13 @@
       <a href="#" class="nav-link sidebar-icon" data-page="desejos" title="Desejos"><i class="fas fa-heart"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="exportar" title="Exportar"><i class="fas fa-download"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="configuracoes" title="Configurações"><i class="fas fa-cog"></i></a>
-    </div>
-    <div class="mt-auto p-3">
-      <div class="sync-status-desktop small text-center mb-2" data-sync-status="sincronizado" title="Sincronizado">
+      <div class="sidebar-icon sync-status-desktop" data-sync-status="sincronizado" title="Sincronizado">
         <i class="sync-status-icon fas fa-check-circle text-success"></i>
-        <span class="sync-status-text ms-1">Sincronizado</span>
-        <span class="badge bg-warning text-dark rounded-pill ms-1 d-none" data-fila-offline-contador title="Sessões aguardando sincronizar"></span>
+        <span class="badge bg-warning text-dark rounded-pill sidebar-sync-badge d-none" data-fila-offline-contador title="Sessões aguardando sincronizar"></span>
+        <span class="sidebar-sync-toast" aria-live="polite"></span>
       </div>
-      <button id="theme-toggle" class="btn btn-outline-secondary w-100">
-        <i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>
+      <button id="theme-toggle" class="sidebar-icon" title="Alternar tema">
+        <i class="fas fa-moon"></i>
       </button>
     </div>
   </aside>
