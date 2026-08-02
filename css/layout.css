@@ -30,7 +30,7 @@ body.app-loaded #splash-screen {
 }
 @media (min-width: 768px) {
   .content-area {
-    margin-left: 112px;
+    margin-left: 148px;
     padding-bottom: 0;
   }
 }
@@ -41,7 +41,7 @@ body.app-loaded #splash-screen {
 .sidebar {
   position: fixed;
   top: 0; left: 0; bottom: 0;
-  width: 112px;
+  width: 148px;
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   z-index: 1000;
@@ -59,12 +59,12 @@ body.app-loaded #splash-screen {
   color: #fff;
 }
 
-/* Grade de ícones da sidebar (2 colunas) — substitui a lista vertical de
+/* Grade de ícones da sidebar (3 colunas) — substitui a lista vertical de
    texto: cada item é só um ícone com tooltip nativo (title), sem precisar
    de scroll nem de menu suspenso. */
 .sidebar-icon-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
 }
 .sidebar .sidebar-icon {
