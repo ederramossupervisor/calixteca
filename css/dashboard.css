@@ -35,6 +35,54 @@
   transform: translateY(-2px);
 }
 
+/* Ícone de status de sincronização, na frente do título "Calixteca".
+   Fica só o ícone; o texto aparece como um toast temporário que some
+   sozinho quando o status muda de verdade (ver js/sync-status.js). */
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.dashboard-sync-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: default;
+}
+.dashboard-sync-icon .sidebar-sync-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  font-size: 0.55rem;
+  padding: 2px 4px;
+}
+.sidebar-sync-toast {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: normal;
+  white-space: nowrap;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1100;
+}
+.sidebar-sync-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Mini-heatmap do Dashboard — uma única fileira de quadradinhos (um por
    dia), ocupando toda a largura do card. O número de colunas é definido
    via JS (dashboard.js) de acordo com a quantidade de dias. */
