@@ -139,14 +139,6 @@
       <a href="#" class="nav-link sidebar-icon" data-page="desejos" title="Desejos"><i class="fas fa-heart"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="exportar" title="Exportar"><i class="fas fa-download"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="configuracoes" title="Configurações"><i class="fas fa-cog"></i></a>
-      <div class="sidebar-icon sync-status-desktop" data-sync-status="sincronizado" title="Sincronizado">
-        <i class="sync-status-icon fas fa-check-circle text-success"></i>
-        <span class="badge bg-warning text-dark rounded-pill sidebar-sync-badge d-none" data-fila-offline-contador title="Sessões aguardando sincronizar"></span>
-        <span class="sidebar-sync-toast" aria-live="polite"></span>
-      </div>
-      <button id="theme-toggle" class="sidebar-icon" title="Alternar tema">
-        <i class="fas fa-moon"></i>
-      </button>
     </div>
   </aside>
 
@@ -156,7 +148,14 @@
     <div id="page-dashboard" class="page active">
       <div class="container py-4">
         <div class="text-center mb-3">
-          <h1 class="mb-0">Calixteca</h1>
+          <h1 class="mb-0 dashboard-title">
+            <span class="sync-status-desktop dashboard-sync-icon" data-sync-status="sincronizado" title="Sincronizado">
+              <i class="sync-status-icon fas fa-check-circle text-success"></i>
+              <span class="badge bg-warning text-dark rounded-pill sidebar-sync-badge d-none" data-fila-offline-contador title="Sessões aguardando sincronizar"></span>
+              <span class="sidebar-sync-toast" aria-live="polite"></span>
+            </span>
+            Calixteca
+          </h1>
           <p class="text-secondary mb-0">Meu Diário de Leitura</p>
         </div>
         <div class="row g-3">
@@ -1401,6 +1400,17 @@
         <div id="page-configuracoes" class="page">
     <div class="container py-4">
       <h1 class="mb-4">Configurações</h1>
+
+      <!-- Aparência -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header fw-bold"><i class="fas fa-palette me-2"></i>Aparência</div>
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <span>Alternar entre modo claro e escuro</span>
+          <button id="theme-toggle" class="btn btn-outline-secondary">
+            <i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Preferências -->
       <div class="card mb-4 shadow-sm">
