@@ -78,10 +78,6 @@ const Dashboard = (() => {
 
     const maxPag = Math.max(...dias.map(d => d.paginas), 1);
 
-    function parseDataLocal(iso) {
-      const [ano, mes, dia] = iso.split('-').map(Number);
-      return new Date(ano, mes - 1, dia); // evita o "dia -1" do parse em UTC
-    }
     function formatarDataBrasileira(iso) {
       const partes = iso.split('-');
       return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -106,14 +102,9 @@ const Dashboard = (() => {
 
     const grid = document.createElement('div');
     grid.className = 'heatmap-grid';
-
-    // Alinha o primeiro dia na coluna certa do dia da semana (0 = Domingo).
-    const primeiroDiaSemana = parseDataLocal(dias[0].data).getDay();
-    for (let i = 0; i < primeiroDiaSemana; i++) {
-      const vazio = document.createElement('div');
-      vazio.className = 'heatmap-cell heatmap-cell-vazia';
-      grid.appendChild(vazio);
-    }
+    // Uma única fileira: o número de colunas acompanha a quantidade de dias,
+    // pra cada quadradinho ocupar uma fração igual da largura da linha.
+    grid.style.gridTemplateColumns = `repeat(${dias.length}, 1fr)`;
 
     dias.forEach(dia => {
       const cell = document.createElement('div');
