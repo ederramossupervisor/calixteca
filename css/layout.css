@@ -75,16 +75,50 @@ body.app-loaded #splash-screen {
   font-size: 1rem;
   margin-bottom: 0;
   padding: 0;
+  border: none;
+  background: none;
 }
-.sidebar .mt-auto {
-  padding: 0.75rem 0.5rem !important;
-}
+
+/* Status de sincronização: agora só o ícone fica fixo na sidebar; o texto
+   aparece como um toast temporário que some sozinho (ver sync-status.js). */
 .sidebar .sync-status-desktop {
-  font-size: 0.65rem;
+  position: relative;
+  cursor: default;
 }
-.sidebar #theme-toggle {
-  font-size: 0.65rem;
-  padding: 6px 4px;
+.sidebar .sync-status-desktop .sidebar-sync-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.55rem;
+  padding: 2px 4px;
+}
+.sidebar-sync-toast {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1100;
+}
+.sidebar-sync-toast.show {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Botão de tema: agora é só mais um ícone dentro da grade, sem o texto
+   "Modo escuro/Modo claro" que o JS injeta (fica só no title/tooltip). */
+.sidebar #theme-toggle span {
+  display: none;
 }
 /* ========================================= */
 
