@@ -35,18 +35,22 @@
   transform: translateY(-2px);
 }
 
-/* Mini-heatmap do Dashboard — mesma linguagem visual do heatmap de
-   Estatísticas (ver estatisticas.css), só que compacto e sem rolagem,
-   com uma célula por dia dos últimos ~70 dias. */
+/* Mini-heatmap do Dashboard — agora no formato clássico de "calendário de
+   contribuições" (estilo GitHub): 7 linhas fixas (dias da semana, Dom-Sáb)
+   e as semanas crescem da esquerda pra direita, com rolagem horizontal se
+   não couber no card. */
 #mini-heatmap-container {
   width: 100%;
   padding: 4px 0;
+  overflow-x: auto;
 }
 #mini-heatmap-container .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 32px));
+  grid-template-rows: repeat(7, 16px);
+  grid-auto-flow: column;
+  grid-auto-columns: 16px;
   gap: 3px;
-  justify-content: center;
+  width: max-content;
 }
 #mini-heatmap-container .heatmap-cell {
   aspect-ratio: 1 / 1;
