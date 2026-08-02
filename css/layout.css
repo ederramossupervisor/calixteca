@@ -30,7 +30,7 @@ body.app-loaded #splash-screen {
 }
 @media (min-width: 768px) {
   .content-area {
-    margin-left: 250px;
+    margin-left: 112px;
     padding-bottom: 0;
   }
 }
@@ -41,7 +41,7 @@ body.app-loaded #splash-screen {
 .sidebar {
   position: fixed;
   top: 0; left: 0; bottom: 0;
-  width: 250px;
+  width: 112px;
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   z-index: 1000;
@@ -50,13 +50,7 @@ body.app-loaded #splash-screen {
 
 .sidebar .nav-link {
   color: var(--text-secondary);
-  padding: 10px 15px;
   border-radius: var(--radius);
-  margin-bottom: 2px;
-}
-
-.sidebar .dropdown-menu .nav-link:last-child {
-  margin-bottom: 0;
 }
 
 .sidebar .nav-link.active,
@@ -65,14 +59,32 @@ body.app-loaded #splash-screen {
   color: #fff;
 }
 
-/* Botão do dropdown da sidebar — mesma paleta dos links */
-.sidebar #sidebarMenuBtn {
-  color: var(--text-secondary);
-  border-color: var(--border-color);
+/* Grade de ícones da sidebar (2 colunas) — substitui a lista vertical de
+   texto: cada item é só um ícone com tooltip nativo (title), sem precisar
+   de scroll nem de menu suspenso. */
+.sidebar-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
 }
-.sidebar .dropdown-menu {
-  background-color: var(--bg-card);
-  border-color: var(--border-color);
+.sidebar .sidebar-icon {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  margin-bottom: 0;
+  padding: 0;
+}
+.sidebar .mt-auto {
+  padding: 0.75rem 0.5rem !important;
+}
+.sidebar .sync-status-desktop {
+  font-size: 0.65rem;
+}
+.sidebar #theme-toggle {
+  font-size: 0.65rem;
+  padding: 6px 4px;
 }
 /* ========================================= */
 
