@@ -35,26 +35,21 @@
   transform: translateY(-2px);
 }
 
-/* Mini-heatmap do Dashboard — agora no formato clássico de "calendário de
-   contribuições" (estilo GitHub): 7 linhas fixas (dias da semana, Dom-Sáb)
-   e as semanas crescem da esquerda pra direita, com rolagem horizontal se
-   não couber no card. */
+/* Mini-heatmap do Dashboard — uma única fileira de quadradinhos (um por
+   dia), ocupando toda a largura do card. O número de colunas é definido
+   via JS (dashboard.js) de acordo com a quantidade de dias. */
 #mini-heatmap-container {
   width: 100%;
   padding: 4px 0;
-  overflow-x: auto;
 }
 #mini-heatmap-container .heatmap-grid {
   display: grid;
-  grid-template-rows: repeat(7, 16px);
-  grid-auto-flow: column;
-  grid-auto-columns: 16px;
-  gap: 3px;
-  width: max-content;
+  gap: 2px;
+  width: 100%;
 }
 #mini-heatmap-container .heatmap-cell {
   aspect-ratio: 1 / 1;
-  border-radius: 3px;
+  border-radius: 2px;
   cursor: pointer;
   transition: transform 0.1s;
 }
