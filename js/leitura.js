@@ -190,6 +190,20 @@ const Leitura = (() => {
         const secs = totalSeg % 60;
         display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         if (!animFrameId) atualizarDisplayLoop();
+
+        // O Android costuma pausar sozinho o áudio fantasma quando a tela
+        // fica bloqueada por um tempo longo. Se isso acontecer, o primeiro
+        // toque em Pausar/Retomar pode ser "engolido" pelo navegador só pra
+        // retomar o áudio (exigência de gesto do usuário), em vez de
+        // realmente acionar o botão. Resincroniza aqui, assim que a tela
+        // volta, pra não depender do toque do usuário pra isso.
+        if (audioFantasma && audioFantasma.paused) {
+          audioFantasma.loop = true;
+          audioFantasma.play().catch(() => {});
+        }
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
       }
     });
 
