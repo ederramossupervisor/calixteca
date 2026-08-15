@@ -569,6 +569,12 @@
                   <div id="tempo-calculado" class="mt-2 small text-success d-none">
                     <i class="fas fa-clock"></i> Tempo calculado: <span id="tempo-minutos">0</span> min
                   </div>
+                  <!-- Guarda o tempo ativo do cronômetro (ms acumulados, já descontando
+                       pausas), convertido em minutos, para ser enviado junto no salvamento.
+                       Populado por leitura.js (cronômetro da própria página) e por leitor.js
+                       (cronômetro dentro do leitor de livros). Vazio = sem cronômetro usado
+                       nesta sessão (entrada 100% manual). -->
+                  <input type="hidden" id="tempo-ativo-minutos" value="">
                 </div>
               </div>
             </div>
