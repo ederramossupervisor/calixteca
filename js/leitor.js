@@ -1588,7 +1588,8 @@ const Leitor = (() => {
       horaInicio: horaInicioSessao || horaFimSessao,
       horaFim: horaFimSessao,
       paginaInicial: paginaInicialCronometro,
-      paginaFinal: paginaAtual
+      paginaFinal: paginaAtual,
+      minutosLidos
     });
   }
 
@@ -1602,12 +1603,14 @@ const Leitor = (() => {
     const inPI = document.getElementById('pagina-inicial');
     const inPF = document.getElementById('pagina-final');
     const inL = document.getElementById('local-sessao');
+    const inTempo = document.getElementById('tempo-ativo-minutos');
 
     if (inD) inD.value = dados.data;
     if (inHI) inHI.value = dados.horaInicio;
     if (inHF) inHF.value = dados.horaFim;
     if (inPI) inPI.value = dados.paginaInicial;
     if (inPF) inPF.value = dados.paginaFinal;
+    if (inTempo) inTempo.value = dados.minutosLidos || '';
     if (inL && !inL.value) inL.value = `Leitor ${tipoArquivo ? tipoArquivo.toUpperCase() : ''}`;
 
     [inHI, inHF, inPI, inPF].forEach(el => {
