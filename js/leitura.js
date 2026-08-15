@@ -20,6 +20,7 @@ const Leitura = (() => {
   const btnPausar = document.getElementById('btn-pausar');
   const btnRetomar = document.getElementById('btn-retomar');
   const btnFinalizar = document.getElementById('btn-finalizar');
+  const tempoAtivoInput = document.getElementById('tempo-ativo-minutos');
 
   let livrosCache = [];
   let editandoSessaoID = null;
@@ -352,6 +353,9 @@ const Leitura = (() => {
     btnRetomar.classList.remove('d-none');
     horaInicio.disabled = false;
     horaFim.disabled = false;
+    if (tempoAtivoInput) {
+      tempoAtivoInput.value = tempoAcumulado > 0 ? Math.max(1, Math.round(tempoAcumulado / 60000)) : '';
+    }
 
     const audio = document.getElementById('audio-fantasma');
     if (audio) audio.pause();
@@ -398,6 +402,9 @@ const Leitura = (() => {
     const secs = totalSeg % 60;
     display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     horaFim.value = new Date().toTimeString().slice(0, 5);
+    if (tempoAtivoInput) {
+      tempoAtivoInput.value = totalMs > 0 ? Math.max(1, Math.round(totalMs / 60000)) : '';
+    }
     calcularTempo();
     btnIniciar.classList.remove('d-none');
     btnPausar.classList.add('d-none');
@@ -423,6 +430,7 @@ const Leitura = (() => {
     inicioCronometro = null;
     display.textContent = '00:00';
     display.classList.remove('pulsando');
+    if (tempoAtivoInput) tempoAtivoInput.value = '';
     btnIniciar.classList.remove('d-none');
     btnPausar.classList.add('d-none');
     btnRetomar.classList.add('d-none');
@@ -467,6 +475,16 @@ const Leitura = (() => {
   }
 
   function calcularTempo() {
+    // Se o cronômetro foi usado (com ou sem pausas), esse é o tempo real de
+    // leitura e tem prioridade sobre a diferença de horários — horaInício/
+    // horaFim marcam o intervalo do relógio (útil pra saber quando a sessão
+    // aconteceu), mas incluem qualquer tempo pausado no meio.
+    const tempoAtivo = tempoAtivoInput && tempoAtivoInput.value ? parseInt(tempoAtivoInput.value, 10) : 0;
+    if (tempoAtivo > 0) {
+      tempoMinSpan.textContent = tempoAtivo;
+      tempoCalculadoDiv.classList.remove('d-none');
+      return;
+    }
     if (horaInicio.value && horaFim.value) {
       const [hi, mi] = horaInicio.value.split(':').map(Number);
       const [hf, mf] = horaFim.value.split(':').map(Number);
@@ -714,6 +732,15 @@ const Leitura = (() => {
       observacoes: '' // será ignorado, pois agora usamos múltiplas anotações
     };
 
+    // Tempo real de leitura, medido pelo cronômetro (já descontando pausas).
+    // Só existe se o cronômetro foi usado nesta sessão; sessões digitadas
+    // manualmente continuam sem esse campo, e o backend deve calcular a
+    // duração a partir de horaInicio/horaFim como já faz hoje.
+    const tempoAtivoMinutos = tempoAtivoInput && tempoAtivoInput.value ? parseInt(tempoAtivoInput.value, 10) : 0;
+    if (tempoAtivoMinutos > 0) {
+      sessao.tempoMinutos = tempoAtivoMinutos;
+    }
+
     const btnSubmit = form.querySelector('button[type="submit"]');
 
     // Sem conexão e é uma sessão nova: em vez de recusar, guarda tudo
@@ -846,6 +873,7 @@ const Leitura = (() => {
     const sess = lista.find(s => s.ID === id);
     if (!sess) return;
     editandoSessaoID = id;
+    if (tempoAtivoInput) tempoAtivoInput.value = '';
     const livroEdit = livrosCache.find(l => l.ID === sess.LivroID);
     if (livroEdit) {
       livroInput.value = `${livroEdit.Título} - ${livroEdit.Autor} (${livroEdit.Status})`;
