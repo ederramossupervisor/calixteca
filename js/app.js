@@ -1,5 +1,29 @@
 // Controlador principal da aplicação
+
+// --- Navegação por histórico (botão/gesto "voltar" do celular) ---
+// A ideia é simples: enquanto o usuário estiver em qualquer página que não
+// seja o Início, existe UMA entrada extra no histórico do navegador. Ao
+// pressionar/arrastar "voltar", essa entrada é consumida e a gente cai no
+// Início, sem fechar o app. Se o usuário já está no Início, não existe
+// entrada extra pra consumir, então o próximo "voltar" sai do app
+// normalmente (comportamento padrão esperado pelo usuário).
+let navegacaoViaHistorico = false;
+let historicoTemEntradaExtra = false;
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Marca a entrada inicial do histórico como sendo a página Início.
+  history.replaceState({ page: 'dashboard' }, '', window.location.href);
+
+  window.addEventListener('popstate', (event) => {
+    // Evita reentrância: essa navegação já veio do histórico, não precisa
+    // empilhar/registrar nada de novo.
+    navegacaoViaHistorico = true;
+    historicoTemEntradaExtra = false;
+    const pagina = (event.state && event.state.page) || 'dashboard';
+    activatePageGlobal(pagina);
+    navegacaoViaHistorico = false;
+  });
+
   const splash = document.getElementById('splash-screen');
   const inicioSplash = Date.now();
 
@@ -57,6 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Função pública para ativar uma página (usada por atalhos e navegação)
 function activatePageGlobal(pageName) {
+  // Gerencia a entrada extra do histórico (ver comentário acima), exceto
+  // quando esta chamada já veio de um evento popstate (botão/gesto voltar).
+  if (!navegacaoViaHistorico) {
+    if (pageName === 'dashboard') {
+      // Voltando ao Início "andando pelo app" (ex.: clicou no ícone Início):
+      // remove a entrada extra, se houver, pra não deixar lixo no histórico.
+      if (historicoTemEntradaExtra) {
+        history.replaceState({ page: 'dashboard' }, '', window.location.href);
+        historicoTemEntradaExtra = false;
+      }
+    } else if (!historicoTemEntradaExtra) {
+      // Primeira navegação pra fora do Início: empilha UMA entrada.
+      history.pushState({ page: pageName }, '', window.location.href);
+      historicoTemEntradaExtra = true;
+    } else {
+      // Já estava em outra página que não o Início: só atualiza qual é,
+      // sem empilhar mais uma (assim "voltar" sempre leva direto ao
+      // Início, não pra página anterior).
+      history.replaceState({ page: pageName }, '', window.location.href);
+    }
+  }
+
   // Atualiza links ativos
   const navItems = document.querySelectorAll('.nav-link, .bottom-nav .nav-item');
   navItems.forEach(link => {
