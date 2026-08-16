@@ -1,4 +1,13 @@
 /* Layout principal */
+
+/* Alturas das barras mobile fixas — usadas tanto para dimensionar as barras
+   quanto para o padding de compensação do conteúdo, num único lugar (evita
+   as duas coisas saírem de sincronia se o tamanho mudar de novo depois). */
+:root {
+  --mobile-topnav-height: 56px;
+  --mobile-bottomnav-height: 64px;
+}
+
 html, body {
   height: 100%;
   margin: 0;
@@ -25,7 +34,7 @@ body.app-loaded #splash-screen {
 /* Área de conteúdo principal */
 .content-area {
   margin-left: 0;
-  padding-bottom: 70px;
+  padding-bottom: var(--mobile-bottomnav-height);
   min-height: 100vh;
 }
 @media (min-width: 768px) {
@@ -130,13 +139,13 @@ body.dark-mode .bottom-nav {
 }
 .bottom-nav .nav-item {
   flex-shrink: 0;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.2;
-  padding: 0.25rem 0.3rem;
-  min-width: 44px;
+  padding: 0.4rem 0.4rem;
+  min-width: 48px;
 }
 .bottom-nav .nav-item i {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 /* Opcional: esconde o texto em telas muito pequenas (menos de 360px) */
@@ -145,22 +154,25 @@ body.dark-mode .bottom-nav {
     display: none !important;
   }
   .bottom-nav .nav-item i {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
 }
 
 /* Barra superior mobile */
 .mobile-navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  min-height: var(--mobile-topnav-height);
   z-index: 1030;
   background-color: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
 }
 @media (max-width: 767px) {
   .content-area {
-    padding-top: 0;
-    padding-bottom: 70px;
+    padding-top: var(--mobile-topnav-height);
+    padding-bottom: var(--mobile-bottomnav-height);
   }
 }
 
