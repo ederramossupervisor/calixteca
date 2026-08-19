@@ -54,17 +54,31 @@ const Dashboard = (() => {
       }
     }
 
-    // Mini-heatmap dos últimos ~70 dias — busca à parte, sem atrasar/quebrar
+    // Mini-heatmap dos últimos dias — busca à parte, sem atrasar/quebrar
     // o resto do Dashboard se falhar (mesmo padrão do Insights Avançados em
     // Estatísticas). Requer a ação 'heatmapRecente' no Code.gs.
     carregarMiniHeatmap();
   }
 
+  // No mobile a fileira única de 70 quadradinhos fica fina demais pra ser
+  // útil (cada célula vira uma tira de poucos pixels). Em telas estreitas
+  // pedimos só as últimas 2 semanas e desenhamos um grid de 7 colunas com
+  // células bem maiores — igual ao desktop segue mostrando os ~70 dias
+  // na fileira única, que ali tem espaço de sobra.
+  const MOBILE_BREAKPOINT = 767;
+  const DIAS_MOBILE = 14;
+  const DIAS_DESKTOP = 70;
+
+  function ehMobile() {
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+  }
+
   async function carregarMiniHeatmap() {
     const container = document.getElementById('mini-heatmap-container');
     if (!container) return;
+    const totalDias = ehMobile() ? DIAS_MOBILE : DIAS_DESKTOP;
     try {
-      const dias = await API.enviar({ acao: 'heatmapRecente', dias: 70 });
+      const dias = await API.enviar({ acao: 'heatmapRecente', dias: totalDias });
       if (Array.isArray(dias)) renderizarMiniHeatmap(dias);
     } catch (e) {
       console.warn('Falha ao carregar mini-heatmap:', e);
@@ -76,7 +90,13 @@ const Dashboard = (() => {
     if (!container || !dias || !dias.length) return;
     container.innerHTML = '';
 
+    // Modo compacto: grid de 7 colunas com células grandes e rótulo do dia
+    // da semana — usado quando já pedimos um recorte curto (mobile).
+    const modoCompacto = dias.length <= 14;
+
     const maxPag = Math.max(...dias.map(d => d.paginas), 1);
+    const hojeISO = new Date().toISOString().split('T')[0];
+    const diasSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
     function formatarDataBrasileira(iso) {
       const partes = iso.split('-');
@@ -101,10 +121,43 @@ const Dashboard = (() => {
     }
 
     const grid = document.createElement('div');
-    grid.className = 'heatmap-grid';
-    // Uma única fileira: o número de colunas acompanha a quantidade de dias,
-    // pra cada quadradinho ocupar uma fração igual da largura da linha.
-    grid.style.gridTemplateColumns = `repeat(${dias.length}, 1fr)`;
+    grid.className = modoCompacto ? 'heatmap-grid heatmap-grid-compacta' : 'heatmap-grid';
+    if (modoCompacto) {
+      // 7 colunas fixas (uma por dia da semana); o próprio grid quebra em
+      // duas fileiras quando são 14 dias.
+      grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+    } else {
+      // Uma única fileira: o número de colunas acompanha a quantidade de
+      // dias, pra cada quadradinho ocupar uma fração igual da largura da
+      // linha.
+      grid.style.gridTemplateColumns = `repeat(${dias.length}, 1fr)`;
+    }
+
+    if (modoCompacto) {
+      dias.forEach(dia => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'heatmap-celula-wrapper';
+
+        const label = document.createElement('div');
+        label.className = 'heatmap-dia-label';
+        const dataObj = new Date(dia.data + 'T00:00:00');
+        label.textContent = diasSemana[dataObj.getDay()];
+        wrapper.appendChild(label);
+
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        const intensidade = dia.paginas / maxPag;
+        cell.style.backgroundColor = corCelula(intensidade);
+        cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
+        if (dia.paginas > 0) cell.textContent = dia.paginas;
+        if (dia.data === hojeISO) cell.classList.add('heatmap-cell-hoje');
+        wrapper.appendChild(cell);
+
+        grid.appendChild(wrapper);
+      });
+      container.appendChild(grid);
+      return;
+    }
 
     dias.forEach(dia => {
       const cell = document.createElement('div');
