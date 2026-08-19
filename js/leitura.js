@@ -23,6 +23,7 @@ const Leitura = (() => {
   const tempoAtivoInput = document.getElementById('tempo-ativo-minutos');
 
   let livrosCache = [];
+  let sessoesCache = [];
   let editandoSessaoID = null;
   let livroMap = {};
   // Novas variáveis do cronômetro
@@ -133,7 +134,10 @@ const Leitura = (() => {
     });
 
     [pagInicial, pagFinal].forEach(el => el.addEventListener('input', calcularPaginas));
-    refreshBtn.addEventListener('click', carregarLivros);
+    refreshBtn.addEventListener('click', async () => {
+      await carregarLivros();
+      selecionarLivroPadrao();
+    });
     form.addEventListener('submit', salvarSessao);
     document.getElementById('clear-session-btn')?.addEventListener('click', limparFormulario);
 
@@ -208,8 +212,10 @@ const Leitura = (() => {
       }
     });
 
-    carregarLivros();
-    carregarHistorico();
+    // Carrega livros e histórico juntos e só então escolhe o livro padrão do
+    // select, já que essa escolha depende dos dois (status "Lendo" vem dos
+    // livros, e o desempate por sessão mais recente vem do histórico).
+    Promise.all([carregarLivros(), carregarHistorico()]).then(selecionarLivroPadrao);
     console.log('✅ Módulo Leitura pronto.');
   }
 
@@ -474,6 +480,35 @@ const Leitura = (() => {
     });
   }
 
+  // Define automaticamente o livro selecionado no formulário: o livro que
+  // está "Lendo" no momento. Se houver mais de um "Lendo", usa o que teve a
+  // sessão registrada mais recentemente (com base no histórico). Não faz
+  // nada se a pessoa já escolheu um livro manualmente ou se está editando
+  // uma sessão existente.
+  function selecionarLivroPadrao() {
+    if (editandoSessaoID) return;
+    if (livroInput.value.trim()) return;
+
+    const lendo = livrosCache.filter(l => l.Status === 'Lendo');
+    if (lendo.length === 0) return;
+
+    let livroPadrao = lendo[0];
+    if (lendo.length > 1) {
+      const sessaoRecente = sessoesCache.find(sess => lendo.some(l => l.ID === sess.LivroID));
+      if (sessaoRecente) {
+        livroPadrao = lendo.find(l => l.ID === sessaoRecente.LivroID);
+      }
+    }
+
+    const texto = `${livroPadrao.Título} - ${livroPadrao.Autor} (${livroPadrao.Status})`;
+    livroInput.value = texto;
+    livroInfo.innerHTML = `
+      <strong>${livroPadrao.Título}</strong> | ${livroPadrao.Autor}<br>
+      Páginas totais: ${livroPadrao.NúmeroPáginas || '?'} | Status: ${livroPadrao.Status} | Lidas: ${livroPadrao.PáginasLidasAcumuladas || 0}
+    `;
+    atualizarMediaSession(livroPadrao);
+  }
+
   function calcularTempo() {
     // Se o cronômetro foi usado (com ou sem pausas), esse é o tempo real de
     // leitura e tem prioridade sobre a diferença de horários — horaInício/
@@ -718,6 +753,13 @@ const Leitura = (() => {
       return;
     }
 
+    const livroSelecionado = livrosCache.find(l => l.ID === livroID);
+    const tituloConfirmacao = livroSelecionado ? livroSelecionado.Título : textoSelecionado;
+    const acaoConfirmacao = editandoSessaoID ? 'atualizar a sessão' : 'registrar a sessão';
+    if (!confirm(`Confirma ${acaoConfirmacao} para o livro "${tituloConfirmacao}"?`)) {
+      return;
+    }
+
     const sessao = {
       livroID,
       data: dataInput.value,
@@ -774,8 +816,7 @@ const Leitura = (() => {
         Util.toast(editandoSessaoID ? 'Sessão atualizada!' : 'Sessão registrada!', 'success');
         limparFormulario();
         editandoSessaoID = null;
-        carregarHistorico();
-        carregarLivros();
+        Promise.all([carregarLivros(), carregarHistorico()]).then(selecionarLivroPadrao);
       } else {
         throw new Error(resposta?.erro || 'Falha no servidor');
       }
@@ -835,6 +876,11 @@ const Leitura = (() => {
         Util.toast('Modo offline - dados do último acesso.', 'info');
       }
     }
+
+    // listRecentSessions já retorna as sessões da mais recente para a mais
+    // antiga (é como a lista de histórico abaixo é montada), então guardamos
+    // nessa ordem para usar depois na escolha do livro padrão do formulário.
+    sessoesCache = sessoes;
 
     if (sessoes.length > 0) {
       historicoContainer.innerHTML = '';
