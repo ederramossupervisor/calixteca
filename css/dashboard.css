@@ -106,3 +106,41 @@
   transform: scale(1.3);
   z-index: 2;
 }
+
+/* Modo compacto (mobile): 7 colunas com células grandes, rótulo do dia
+   da semana em cima e o número de páginas dentro do quadradinho — troca
+   a fileira fininha de 70 dias por algo legível em tela pequena. */
+#mini-heatmap-container .heatmap-grid-compacta {
+  gap: 8px 6px;
+}
+#mini-heatmap-container .heatmap-celula-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#mini-heatmap-container .heatmap-dia-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  line-height: 1;
+}
+#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  transition: transform 0.1s;
+}
+#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell-hoje {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell:active {
+  transform: scale(1.15);
+}
