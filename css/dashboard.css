@@ -80,30 +80,29 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Últimos livros lidos — tira horizontal com scroll de capas (5 no
-   mobile, 10 no desktop; ver DIAS_MOBILE/DIAS_DESKTOP-like consts em
-   js/dashboard.js: ULTIMOS_LIDOS_MOBILE / ULTIMOS_LIDOS_DESKTOP). */
+/* Últimos livros lidos — grade que preenche exatamente a largura do
+   card (sem scroll, sem sobra de espaço): 5 no mobile, 15 no desktop
+   (ver ULTIMOS_LIDOS_MOBILE / ULTIMOS_LIDOS_DESKTOP em js/dashboard.js).
+   O número de colunas é definido via JS de acordo com a quantidade de
+   livros a mostrar; as capas usam aspect-ratio pra encolher junto com
+   a coluna, então nunca estouram a largura do card. */
 #ultimos-lidos-container {
   width: 100%;
 }
-.ultimos-lidos-scroll {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 4px 2px 8px;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
+.ultimos-lidos-grade {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  align-items: start;
 }
 .ultimos-lidos-item {
-  flex: 0 0 auto;
-  width: 76px;
-  scroll-snap-align: start;
+  min-width: 0; /* permite a coluna encolher abaixo do tamanho intrínseco */
   cursor: pointer;
   text-align: center;
 }
 .ultimos-lidos-item .ultimos-lidos-capa {
-  width: 76px;
-  height: 108px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   border-radius: 6px;
   overflow: hidden;
   background: var(--bg-secondary);
@@ -120,7 +119,7 @@
 .ultimos-lidos-item .ultimos-lidos-titulo {
   display: block;
   margin-top: 6px;
-  font-size: 0.7rem;
+  font-size: clamp(0.55rem, 1.6vw, 0.7rem);
   line-height: 1.15;
   color: var(--text-secondary);
   overflow: hidden;
