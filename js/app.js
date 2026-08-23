@@ -223,12 +223,14 @@ function initTema() {
   function atualizarBotao(btn) {
     if (!btn) return;
     const isDark = body.classList.contains('dark-mode');
-    btn.innerHTML = isDark
-      ? '<i class="fas fa-sun"></i> <span class="ms-1">Modo claro</span>'
-      : '<i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>';
+    const somenteIcone = btn.id === 'theme-toggle-mobile-top';
+    btn.innerHTML = somenteIcone
+      ? `<i class="fas ${isDark ? 'fa-sun' : 'fa-moon'}"></i>`
+      : (isDark
+        ? '<i class="fas fa-sun"></i> <span class="ms-1">Modo claro</span>'
+        : '<i class="fas fa-moon"></i> <span class="ms-1">Modo escuro</span>');
     btn.title = isDark ? 'Modo claro' : 'Modo escuro';
   }
-
   function atualizarTodos() {
     [toggleDesktop, toggleMobileOffcanvas, toggleMobileTop].forEach(atualizarBotao);
   }
