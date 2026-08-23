@@ -96,8 +96,12 @@ const Dashboard = (() => {
       return;
     }
 
-    const scroll = document.createElement('div');
-    scroll.className = 'ultimos-lidos-scroll';
+    // Grade (não tira com scroll): o número de colunas acompanha a
+    // quantidade de livros a mostrar, pra ocupar exatamente a largura do
+    // card, sem barra de rolagem e sem sobra de espaço em branco.
+    const grade = document.createElement('div');
+    grade.className = 'ultimos-lidos-grade';
+    grade.style.gridTemplateColumns = `repeat(${livros.length}, 1fr)`;
 
     livros.forEach(livro => {
       const item = document.createElement('div');
@@ -124,11 +128,11 @@ const Dashboard = (() => {
         if (typeof activatePageGlobal === 'function') activatePageGlobal('biblioteca');
       });
 
-      scroll.appendChild(item);
+      grade.appendChild(item);
     });
 
     container.innerHTML = '';
-    container.appendChild(scroll);
+    container.appendChild(grade);
   }
 
   // Recalcula quantas capas mostrar (5/10) ao cruzar o breakpoint mobile,
@@ -153,8 +157,8 @@ const Dashboard = (() => {
     return window.innerWidth <= MOBILE_BREAKPOINT;
   }
 
-  // Últimos livros lidos: 5 capas no mobile, 10 no desktop.
-  const ULTIMOS_LIDOS_MOBILE = 10;
+  // Últimos livros lidos: 5 capas no mobile, 15 no desktop.
+  const ULTIMOS_LIDOS_MOBILE = 5;
   const ULTIMOS_LIDOS_DESKTOP = 15;
   let ultimosLidosTodos = []; // lista completa (já filtrada/ordenada) em cache local
   let resizeTimer = null;
