@@ -4,7 +4,7 @@
   "description": "Calixteca - Seu diário de leitura inteligente",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f2ebdc",
   "theme_color": "#6366f1",
   "icons": [
     { "src": "img/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png" },
