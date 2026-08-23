@@ -80,6 +80,59 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* Últimos livros lidos — tira horizontal com scroll de capas (5 no
+   mobile, 10 no desktop; ver DIAS_MOBILE/DIAS_DESKTOP-like consts em
+   js/dashboard.js: ULTIMOS_LIDOS_MOBILE / ULTIMOS_LIDOS_DESKTOP). */
+#ultimos-lidos-container {
+  width: 100%;
+}
+.ultimos-lidos-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.ultimos-lidos-item {
+  flex: 0 0 auto;
+  width: 76px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  text-align: center;
+}
+.ultimos-lidos-item .ultimos-lidos-capa {
+  width: 76px;
+  height: 108px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ultimos-lidos-item .ultimos-lidos-capa img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ultimos-lidos-item .ultimos-lidos-titulo {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  line-height: 1.15;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.ultimos-lidos-item:active .ultimos-lidos-capa {
+  transform: scale(0.96);
+}
+
 /* Mini-heatmap do Dashboard — uma única fileira de quadradinhos (um por
    dia), ocupando toda a largura do card. O número de colunas é definido
    via JS (dashboard.js) de acordo com a quantidade de dias. */

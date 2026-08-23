@@ -58,7 +58,87 @@ const Dashboard = (() => {
     // o resto do Dashboard se falhar (mesmo padrão do Insights Avançados em
     // Estatísticas). Requer a ação 'heatmapRecente' no Code.gs.
     carregarMiniHeatmap();
+
+    // Últimos livros lidos (capas) — busca à parte, mesmo padrão do
+    // mini-heatmap: não atrasa nem quebra o resto do Dashboard se falhar.
+    carregarUltimosLidos();
   }
+
+  async function carregarUltimosLidos() {
+    const container = document.getElementById('ultimos-lidos-container');
+    if (!container) return;
+    try {
+      // 'listAllBooks' já é uma ação cacheável em API (TTL de 45s) — se a
+      // Biblioteca já pediu a mesma lista há pouco, reaproveita sem nova
+      // chamada de rede.
+      const resp = await API.enviar({ acao: 'listAllBooks' });
+      if (!Array.isArray(resp)) return;
+
+      ultimosLidosTodos = resp
+        .filter(l => l.Status === 'Finalizado' && l.DataTérmino)
+        .sort((a, b) => new Date(b.DataTérmino) - new Date(a.DataTérmino));
+
+      renderizarUltimosLidos();
+    } catch (e) {
+      console.warn('Falha ao carregar últimos livros lidos:', e);
+    }
+  }
+
+  function renderizarUltimosLidos() {
+    const container = document.getElementById('ultimos-lidos-container');
+    if (!container) return;
+
+    const total = ehMobile() ? ULTIMOS_LIDOS_MOBILE : ULTIMOS_LIDOS_DESKTOP;
+    const livros = ultimosLidosTodos.slice(0, total);
+
+    if (livros.length === 0) {
+      container.innerHTML = '<div class="text-muted small" id="ultimos-lidos-vazio">Nenhum livro finalizado ainda.</div>';
+      return;
+    }
+
+    const scroll = document.createElement('div');
+    scroll.className = 'ultimos-lidos-scroll';
+
+    livros.forEach(livro => {
+      const item = document.createElement('div');
+      item.className = 'ultimos-lidos-item';
+      item.dataset.id = livro.ID;
+
+      const capa = document.createElement('div');
+      capa.className = 'ultimos-lidos-capa';
+      capa.innerHTML = livro.URLCapa
+        ? `<img src="${livro.URLCapa}" alt="Capa de ${Util.escapeHTML(livro.Título || '')}" loading="lazy">`
+        : '<i class="fas fa-book text-muted"></i>';
+      item.appendChild(capa);
+
+      const titulo = document.createElement('span');
+      titulo.className = 'ultimos-lidos-titulo';
+      titulo.textContent = livro.Título || 'Sem título';
+      item.appendChild(titulo);
+
+      item.title = livro.Título || 'Sem título';
+      item.addEventListener('click', () => {
+        // Leva pra Biblioteca, onde dá pra abrir os detalhes do livro
+        // (o modal de detalhes depende do estado interno daquele módulo,
+        // por isso não é aberto direto daqui).
+        if (typeof activatePageGlobal === 'function') activatePageGlobal('biblioteca');
+      });
+
+      scroll.appendChild(item);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(scroll);
+  }
+
+  // Recalcula quantas capas mostrar (5/10) ao cruzar o breakpoint mobile,
+  // sem nova chamada de rede — só reaproveita a lista já buscada.
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (ultimosLidosTodos.length > 0) renderizarUltimosLidos();
+    }, 200);
+  });
 
   // No mobile a fileira única de 70 quadradinhos fica fina demais pra ser
   // útil (cada célula vira uma tira de poucos pixels). Em telas estreitas
@@ -72,6 +152,12 @@ const Dashboard = (() => {
   function ehMobile() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
   }
+
+  // Últimos livros lidos: 5 capas no mobile, 10 no desktop.
+  const ULTIMOS_LIDOS_MOBILE = 5;
+  const ULTIMOS_LIDOS_DESKTOP = 10;
+  let ultimosLidosTodos = []; // lista completa (já filtrada/ordenada) em cache local
+  let resizeTimer = null;
 
   async function carregarMiniHeatmap() {
     const container = document.getElementById('mini-heatmap-container');
