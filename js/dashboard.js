@@ -154,8 +154,8 @@ const Dashboard = (() => {
   }
 
   // Últimos livros lidos: 5 capas no mobile, 10 no desktop.
-  const ULTIMOS_LIDOS_MOBILE = 5;
-  const ULTIMOS_LIDOS_DESKTOP = 10;
+  const ULTIMOS_LIDOS_MOBILE = 10;
+  const ULTIMOS_LIDOS_DESKTOP = 15;
   let ultimosLidosTodos = []; // lista completa (já filtrada/ordenada) em cache local
   let resizeTimer = null;
 
