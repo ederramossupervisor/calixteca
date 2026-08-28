@@ -149,10 +149,19 @@ const Leitura = (() => {
     // Configura múltiplas anotações
     containerAnotacoes = document.getElementById('anotacoes-sessao-container');
     templateAnotacao = document.getElementById('template-anotacao-item');
+    // Sempre começa com um único módulo de anotação: limpa qualquer item
+    // residual de uma inicialização anterior antes de adicionar o inicial.
+    if (containerAnotacoes) containerAnotacoes.innerHTML = '';
     adicionarItemAnotacao();
-    document.getElementById('btn-adicionar-anotacao')?.addEventListener('click', () => {
-      adicionarItemAnotacao();
-    });
+    const btnAdicionarAnotacao = document.getElementById('btn-adicionar-anotacao');
+    // Evita religar o listener em cada init() (a página é reinicializada a
+    // cada navegação), o que faria um único clique adicionar vários itens.
+    if (btnAdicionarAnotacao && !btnAdicionarAnotacao.dataset.listenerLigado) {
+      btnAdicionarAnotacao.addEventListener('click', () => {
+        adicionarItemAnotacao();
+      });
+      btnAdicionarAnotacao.dataset.listenerLigado = 'true';
+    }
 
     // Sobrescreve limparFormulario para limpar itens extras
     const limparOriginal = limparFormulario;
