@@ -121,6 +121,13 @@ function activatePageGlobal(pageName) {
     }
   });
 
+  // Sempre abre a página nova no topo, em vez de manter a posição de
+  // rolagem que a página anterior deixou (senão a nova página pode abrir
+  // no meio/final dependendo de onde o usuário parou na página anterior).
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
   // Inicializa módulos específicos
   switch (pageName) {
     case 'dashboard':
