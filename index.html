@@ -372,13 +372,25 @@
                     </div>
                     <div class="col-md-6">
                       <label for="paginasLidas" class="form-label">Páginas já lidas</label>
-                      <input type="number" id="paginasLidas" class="form-control" min="0" value="0">
-                      <small class="text-muted">Informe se o livro já foi iniciado.</small>
+                      <input type="number" id="paginasLidas" class="form-control" min="0" value="0" readonly disabled>
+                      <small class="text-muted">Calculado automaticamente (sessões + campos abaixo). Não editável.</small>
+                    </div>
+                  </div>
+                  <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                      <label for="paginasAnosAnteriores" class="form-label">Páginas lidas em anos anteriores</label>
+                      <input type="number" id="paginasAnosAnteriores" class="form-control" min="0" value="0">
+                      <small class="text-muted">Páginas lidas antes deste ano, sem sessão registrada (não contam na estatística do ano atual).</small>
                     </div>
                     <div class="col-md-6">
-                      <label for="paginasAnosAnteriores" class="form-label">Páginas lidas antes de 2026</label>
-                      <input type="number" id="paginasAnosAnteriores" class="form-control" min="0" value="0">
-                      <small class="text-muted">Páginas lidas em anos anteriores (não contarão na meta atual).</small>
+                      <label for="paginasExtra" class="form-label">Páginas lidas sem sessão registrada</label>
+                      <input type="number" id="paginasExtra" class="form-control" min="0" value="0">
+                      <small class="text-muted">Páginas lidas neste livro num ano específico, mas sem sessão detalhada.</small>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="paginasExtraAno" class="form-label">Ano dessas páginas extras</label>
+                      <input type="number" id="paginasExtraAno" class="form-control" min="2000" placeholder="Ex: 2026">
+                      <small class="text-muted">Deixe em branco se não usar o campo acima.</small>
                     </div>
                   </div>
                   <!-- Datas -->
