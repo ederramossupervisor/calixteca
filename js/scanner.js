@@ -19,6 +19,13 @@
  *       últimas leituras e só aceita um código quando ele se repete
  *       várias vezes seguidas (consenso), o que é o padrão recomendado
  *       pela própria documentação do Quagga2 pra uso em produção.
+ *
+ * Além da leitura em si, o módulo tenta ativar foco/exposição automáticos
+ * contínuos assim que a câmera liga (via MediaTrackConstraints), oferece
+ * foco manual ao tocar na tela (reforço pra aparelhos que não focam sozinhos)
+ * e lanterna (quando o navegador/aparelho suporta) — sem isso, em muitos
+ * celulares Android a câmera trava num foco fixo/distante e nunca chega a
+ * enxergar o código de barras com nitidez suficiente pra ser lido.
  */
 const Scanner = (() => {
   const TAMANHO_BUFFER = 5;
@@ -32,6 +39,7 @@ const Scanner = (() => {
   function init() {
     const btnEscanear = document.getElementById('btn-escanear-isbn');
     const btnFechar = document.getElementById('btn-fechar-scanner');
+    const btnLanterna = document.getElementById('btn-lanterna');
     const modalEl = document.getElementById('modal-scanner-isbn');
     if (!btnEscanear || !modalEl) return; // página sem scanner (não é a de Adicionar Livro)
 
@@ -57,6 +65,11 @@ const Scanner = (() => {
 
     modalEl.addEventListener('hidden.bs.modal', pararScanner);
     btnFechar.addEventListener('click', fecharModal);
+    btnLanterna.addEventListener('click', alternarLanterna);
+
+    // Foco por toque: reforça o foco contínuo em aparelhos/navegadores que
+    // não ativam foco automático sozinhos (ver focarNoToque mais abaixo).
+    document.getElementById('scanner-container').addEventListener('click', (e) => focarNoToque(e));
 
     console.log('✅ Módulo Scanner pronto.');
   }
@@ -66,7 +79,7 @@ const Scanner = (() => {
   function abrir(callback) {
     onSucessoCallback = callback;
     buffer = [];
-    atualizarStatus('Aponte a câmera para o código de barras (parte de trás do livro).');
+    atualizarStatus('Alinhe o código de barras dentro da área marcada e toque na tela pra focar.');
     modalScanner.show();
 
     // Só inicia a câmera depois que o modal terminou a animação de abertura
@@ -138,7 +151,79 @@ const Scanner = (() => {
       Quagga.start();
       scannerAtivo = true;
       Quagga.onDetected(aoDetectar);
+      configurarFocoEExposicaoContinuos();
+      configurarBotaoLanterna();
     });
+  }
+
+  // Tenta ativar foco e exposição automáticos/contínuos via
+  // MediaTrackConstraints "advanced" (suportado no Chrome/Android; o
+  // Safari/iOS não expõe esse controle pela Web, mas nesses aparelhos a
+  // câmera já costuma vir com autofoco contínuo ligado por padrão).
+  function configurarFocoEExposicaoContinuos() {
+    const track = Quagga.CameraAccess.getActiveTrack();
+    if (!track || !track.getCapabilities) return;
+    const capacidades = track.getCapabilities();
+    const avancado = [];
+    if (capacidades.focusMode && capacidades.focusMode.includes('continuous')) {
+      avancado.push({ focusMode: 'continuous' });
+    }
+    if (capacidades.exposureMode && capacidades.exposureMode.includes('continuous')) {
+      avancado.push({ exposureMode: 'continuous' });
+    }
+    if (avancado.length) {
+      track.applyConstraints({ advanced: avancado }).catch((e) => {
+        console.warn('Não foi possível ativar foco contínuo:', e);
+      });
+    }
+  }
+
+  // Foco manual ao tocar na tela: alguns celulares (principalmente com
+  // Chrome/Android mais antigo) só focam de fato quando recebem um ponto de
+  // interesse explícito, mesmo com focusMode "continuous" já pedido acima.
+  function focarNoToque(evento) {
+    if (!scannerAtivo) return;
+    const track = Quagga.CameraAccess.getActiveTrack();
+    if (!track || !track.getCapabilities) return;
+    const capacidades = track.getCapabilities();
+    if (!capacidades.pointsOfInterest) return;
+
+    const retangulo = evento.currentTarget.getBoundingClientRect();
+    const x = (evento.clientX - retangulo.left) / retangulo.width;
+    const y = (evento.clientY - retangulo.top) / retangulo.height;
+
+    track.applyConstraints({ advanced: [{ pointsOfInterest: [{ x, y }] }] }).then(() => {
+      atualizarStatus('Focando...');
+    }).catch((e) => {
+      console.warn('Não foi possível focar no ponto tocado:', e);
+    });
+  }
+
+  // Mostra o botão de lanterna só se o aparelho realmente suportar (nem todo
+  // celular/navegador expõe controle de flash pela Web).
+  function configurarBotaoLanterna() {
+    const btnLanterna = document.getElementById('btn-lanterna');
+    const track = Quagga.CameraAccess.getActiveTrack();
+    if (!track || !track.getCapabilities) return;
+    const capacidades = track.getCapabilities();
+    if (capacidades.torch) {
+      btnLanterna.classList.remove('d-none');
+      btnLanterna.dataset.ligada = '0';
+    } else {
+      btnLanterna.classList.add('d-none');
+    }
+  }
+
+  function alternarLanterna() {
+    const track = Quagga.CameraAccess.getActiveTrack();
+    if (!track) return;
+    const btnLanterna = document.getElementById('btn-lanterna');
+    const ligarAgora = btnLanterna.dataset.ligada !== '1';
+    track.applyConstraints({ advanced: [{ torch: ligarAgora }] }).then(() => {
+      btnLanterna.dataset.ligada = ligarAgora ? '1' : '0';
+      btnLanterna.classList.toggle('btn-warning', ligarAgora);
+      btnLanterna.classList.toggle('btn-outline-secondary', !ligarAgora);
+    }).catch((e) => console.warn('Não foi possível controlar a lanterna:', e));
   }
 
   function pararScanner() {
@@ -151,6 +236,13 @@ const Scanner = (() => {
     }
     scannerAtivo = false;
     buffer = [];
+    const btnLanterna = document.getElementById('btn-lanterna');
+    if (btnLanterna) {
+      btnLanterna.classList.add('d-none');
+      btnLanterna.classList.remove('btn-warning');
+      btnLanterna.classList.add('btn-outline-secondary');
+      btnLanterna.dataset.ligada = '0';
+    }
   }
 
   function aoDetectar(resultado) {
