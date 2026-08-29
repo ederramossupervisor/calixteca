@@ -329,16 +329,6 @@
                 <div class="card-header fw-bold">Informações básicas</div>
                 <div class="card-body">
                   <div class="mb-3">
-                    <label for="isbn" class="form-label">ISBN</label>
-                    <div class="input-group">
-                      <input type="text" id="isbn" class="form-control" placeholder="Escaneie ou digite o ISBN">
-                      <button type="button" id="btn-escanear-isbn" class="btn btn-outline-secondary">
-                        <i class="fas fa-barcode"></i> Escanear
-                      </button>
-                    </div>
-                    <small class="text-muted">Escanear preenche título, autor, editora, ano, páginas e capa automaticamente (quando encontrado).</small>
-                  </div>
-                  <div class="mb-3">
                     <label for="titulo" class="form-label">Título *</label>
                     <input type="text" id="titulo" class="form-control" required>
                   </div>
@@ -1783,35 +1773,6 @@
       </div>
     </div>
   </div>
-  <!-- Modal Scanner de ISBN -->
-  <div class="modal fade" id="modal-scanner-isbn" tabindex="-1" aria-labelledby="modalScannerIsbnLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalScannerIsbnLabel"><i class="fas fa-barcode me-2"></i>Escanear código de barras</h5>
-          <button type="button" class="btn-close" id="btn-fechar-scanner" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-          <div id="scanner-container" style="position: relative; width: 100%;">
-            <div id="scanner-viewport" style="position: relative; width: 100%; min-height: 280px; background: #000; border-radius: 8px; overflow: hidden;">
-              <!-- Quagga injeta o <video> e <canvas> aqui dentro (limpo a cada abertura) -->
-            </div>
-            <!-- Retângulo-guia: mostra a faixa exata que é lida pelo scanner (fica FORA do viewport pra não ser apagado quando ele é limpo) -->
-            <div id="scanner-guia" style="position: absolute; top: 25%; left: 5%; right: 5%; bottom: 25%; border: 2px dashed #fff; border-radius: 6px; pointer-events: none;"></div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <p class="text-muted small mb-0" id="scanner-status">
-              Alinhe o código de barras dentro da área marcada e toque na tela pra focar.
-            </p>
-            <button type="button" id="btn-lanterna" class="btn btn-sm btn-outline-secondary d-none">
-              <i class="fas fa-bolt"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Associar EPUB (deve ficar no final do body) -->
   <div class="modal fade" id="modalAssociarEpub" tabindex="-1" aria-labelledby="modalAssociarEpubLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1918,7 +1879,6 @@
   <!-- Controlador principal (sempre por último) -->
   <script src="js/app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.3/dist/quagga.min.js"></script>
-  <script src="js/scanner.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <audio id="audio-fantasma" src="audio/silencio.wav" loop preload="auto"></audio>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
