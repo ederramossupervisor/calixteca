@@ -89,7 +89,7 @@ const Livros = (() => {
     document.getElementById('editora').value = livro.Editora || '';
     document.getElementById('ano').value = livro.Ano || '';
     document.getElementById('edicao').value = livro.Edição || '';
-    // ISBN removido, campos de idioma e nacionalidade mantidos
+    document.getElementById('isbn').value = livro.ISBN || '';
     document.getElementById('idioma').value = livro.Idioma || '';
     document.getElementById('classico').checked = livro.Clássico === 'true' || livro.Clássico === true;
     document.getElementById('nacionalidadeAutor').value = livro.NacionalidadeAutor || '';
@@ -118,6 +118,24 @@ const Livros = (() => {
     document.getElementById('data-termino').value = livro.DataTérmino || '';
   }
 
+  /* ========== PREENCHIMENTO VIA SCANNER (Google Books / Open Library) ========== */
+  // Só preenche o que veio da busca — não apaga o que o usuário já tiver
+  // digitado à mão em campos que a API não retornou nada.
+  function preencherViaScanner(dados) {
+    if (dados.titulo) document.getElementById('titulo').value = dados.titulo;
+    if (dados.subtitulo) document.getElementById('subtitulo').value = dados.subtitulo;
+    if (dados.autor) document.getElementById('autor').value = dados.autor;
+    if (dados.editora) document.getElementById('editora').value = dados.editora;
+    if (dados.ano) document.getElementById('ano').value = dados.ano;
+    if (dados.numeroPaginas) document.getElementById('numeroPaginas').value = dados.numeroPaginas;
+    if (dados.idioma) document.getElementById('idioma').value = dados.idioma;
+    if (dados.isbn) document.getElementById('isbn').value = dados.isbn;
+    if (dados.urlCapa) {
+      urlCapa.value = dados.urlCapa;
+      mostrarCapa(dados.urlCapa);
+    }
+  }
+
   function mostrarCapa(url) {
     coverPreview.innerHTML = url
       ? `<img src="${url}" alt="Capa do livro" class="img-fluid" onerror="this.parentElement.innerHTML='<span class=\'text-danger\'>Imagem inválida</span>'">`
@@ -142,6 +160,7 @@ const Livros = (() => {
       classico: document.getElementById('classico').checked,
       ano: document.getElementById('ano').value,
       edicao: document.getElementById('edicao').value,
+      isbn: document.getElementById('isbn').value,
       idioma: document.getElementById('idioma').value,
       nacionalidadeAutor: document.getElementById('nacionalidadeAutor').value,
       numeroPaginas: document.getElementById('numeroPaginas').value,
@@ -267,5 +286,5 @@ const Livros = (() => {
     init();
   }
 
-  return { init, editarLivro, cancelarEdicao };
+  return { init, editarLivro, cancelarEdicao, preencherViaScanner };
 })();
