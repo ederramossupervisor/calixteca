@@ -141,7 +141,6 @@ function activatePageGlobal(pageName) {
       break;
     case 'adicionar':
       if (typeof Livros !== 'undefined' && Livros.init) Livros.init();
-      if (typeof Scanner !== 'undefined' && Scanner.init) Scanner.init();
       break;
     case 'biblioteca':
       if (typeof Biblioteca !== 'undefined' && Biblioteca.init) Biblioteca.init();
