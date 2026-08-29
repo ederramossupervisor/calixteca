@@ -329,6 +329,16 @@
                 <div class="card-header fw-bold">Informações básicas</div>
                 <div class="card-body">
                   <div class="mb-3">
+                    <label for="isbn" class="form-label">ISBN</label>
+                    <div class="input-group">
+                      <input type="text" id="isbn" class="form-control" placeholder="Escaneie ou digite o ISBN">
+                      <button type="button" id="btn-escanear-isbn" class="btn btn-outline-secondary">
+                        <i class="fas fa-barcode"></i> Escanear
+                      </button>
+                    </div>
+                    <small class="text-muted">Escanear preenche título, autor, editora, ano, páginas e capa automaticamente (quando encontrado).</small>
+                  </div>
+                  <div class="mb-3">
                     <label for="titulo" class="form-label">Título *</label>
                     <input type="text" id="titulo" class="form-control" required>
                   </div>
@@ -1773,6 +1783,26 @@
       </div>
     </div>
   </div>
+  <!-- Modal Scanner de ISBN -->
+  <div class="modal fade" id="modal-scanner-isbn" tabindex="-1" aria-labelledby="modalScannerIsbnLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalScannerIsbnLabel"><i class="fas fa-barcode me-2"></i>Escanear código de barras</h5>
+          <button type="button" class="btn-close" id="btn-fechar-scanner" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="scanner-viewport" style="position: relative; width: 100%; min-height: 280px; background: #000; border-radius: 8px; overflow: hidden;">
+            <!-- Quagga injeta o <video> e <canvas> aqui dentro -->
+          </div>
+          <p class="text-center text-muted small mt-2 mb-0" id="scanner-status">
+            Aponte a câmera para o código de barras (parte de trás do livro).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Associar EPUB (deve ficar no final do body) -->
   <div class="modal fade" id="modalAssociarEpub" tabindex="-1" aria-labelledby="modalAssociarEpubLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1879,6 +1909,7 @@
   <!-- Controlador principal (sempre por último) -->
   <script src="js/app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.3/dist/quagga.min.js"></script>
+  <script src="js/scanner.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <audio id="audio-fantasma" src="audio/silencio.wav" loop preload="auto"></audio>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
