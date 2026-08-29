@@ -339,16 +339,6 @@
                     <small class="text-muted">Escanear preenche título, autor, editora, ano, páginas e capa automaticamente (quando encontrado).</small>
                   </div>
                   <div class="mb-3">
-                    <label for="isbn" class="form-label">ISBN</label>
-                    <div class="input-group">
-                      <input type="text" id="isbn" class="form-control" placeholder="Escaneie ou digite o ISBN">
-                      <button type="button" id="btn-escanear-isbn" class="btn btn-outline-secondary">
-                        <i class="fas fa-barcode"></i> Escanear
-                      </button>
-                    </div>
-                    <small class="text-muted">Escanear preenche título, autor, editora, ano, páginas e capa automaticamente (quando encontrado).</small>
-                  </div>
-                  <div class="mb-3">
                     <label for="titulo" class="form-label">Título *</label>
                     <input type="text" id="titulo" class="form-control" required>
                   </div>
@@ -1802,12 +1792,21 @@
           <button type="button" class="btn-close" id="btn-fechar-scanner" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
-          <div id="scanner-viewport" style="position: relative; width: 100%; min-height: 280px; background: #000; border-radius: 8px; overflow: hidden;">
-            <!-- Quagga injeta o <video> e <canvas> aqui dentro -->
+          <div id="scanner-container" style="position: relative; width: 100%;">
+            <div id="scanner-viewport" style="position: relative; width: 100%; min-height: 280px; background: #000; border-radius: 8px; overflow: hidden;">
+              <!-- Quagga injeta o <video> e <canvas> aqui dentro (limpo a cada abertura) -->
+            </div>
+            <!-- Retângulo-guia: mostra a faixa exata que é lida pelo scanner (fica FORA do viewport pra não ser apagado quando ele é limpo) -->
+            <div id="scanner-guia" style="position: absolute; top: 25%; left: 5%; right: 5%; bottom: 25%; border: 2px dashed #fff; border-radius: 6px; pointer-events: none;"></div>
           </div>
-          <p class="text-center text-muted small mt-2 mb-0" id="scanner-status">
-            Aponte a câmera para o código de barras (parte de trás do livro).
-          </p>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <p class="text-muted small mb-0" id="scanner-status">
+              Alinhe o código de barras dentro da área marcada e toque na tela pra focar.
+            </p>
+            <button type="button" id="btn-lanterna" class="btn btn-sm btn-outline-secondary d-none">
+              <i class="fas fa-bolt"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
