@@ -2,7 +2,7 @@
  * Módulo de banco de dados local (IndexedDB via Dexie)
  */
 const DB = (() => {
-  const db = new Dexie('EderLivrosDB');
+  const db = new Dexie('CalixtecaDB');
   db.version(1).stores({
     livros: 'ID',
     sessoes: 'ID',
