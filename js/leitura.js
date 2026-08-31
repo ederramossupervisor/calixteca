@@ -26,6 +26,15 @@ const Leitura = (() => {
   let sessoesCache = [];
   let editandoSessaoID = null;
   let livroMap = {};
+  // "Continuar lendo": quando setado (pelo botão do Painel ou por um atalho
+  // do PWA), o próximo carregamento de livros pula a seleção automática
+  // padrão e vai direto pra este livro específico, com a página pré-preenchida.
+  let continuarLivroID = null;
+  // Livro marcado como "atual" no Painel (Configuracoes.livroAtualID) — usado
+  // como critério preferencial de desempate quando há mais de um livro
+  // "Lendo" ao mesmo tempo, pra a escolha automática aqui bater com o que a
+  // pessoa já vê como "o livro que estou lendo agora" no Painel.
+  let livroAtualPreferidoID = null;
   // Novas variáveis do cronômetro
   let cronometroAtivo = false;
   let inicioCronometro = null; // timestamp (ms) de quando iniciou/retomou
@@ -221,10 +230,19 @@ const Leitura = (() => {
       }
     });
 
-    // Carrega livros e histórico juntos e só então escolhe o livro padrão do
-    // select, já que essa escolha depende dos dois (status "Lendo" vem dos
-    // livros, e o desempate por sessão mais recente vem do histórico).
-    Promise.all([carregarLivros(), carregarHistorico()]).then(selecionarLivroPadrao);
+    // Carrega livros, histórico e a preferência de "livro atual" (Painel)
+    // juntos, e só então decide o que preencher no formulário: se alguém
+    // pediu explicitamente pra "continuar" um livro específico (botão do
+    // Painel ou atalho do PWA), vai direto nele; senão, usa a seleção
+    // automática padrão de sempre.
+    Promise.all([carregarLivros(), carregarHistorico(), carregarLivroAtualPreferido()]).then(() => {
+      if (continuarLivroID) {
+        aplicarContinuarLivro(continuarLivroID);
+        continuarLivroID = null;
+      } else {
+        selecionarLivroPadrao();
+      }
+    });
     console.log('✅ Módulo Leitura pronto.');
   }
 
@@ -490,10 +508,11 @@ const Leitura = (() => {
   }
 
   // Define automaticamente o livro selecionado no formulário: o livro que
-  // está "Lendo" no momento. Se houver mais de um "Lendo", usa o que teve a
-  // sessão registrada mais recentemente (com base no histórico). Não faz
-  // nada se a pessoa já escolheu um livro manualmente ou se está editando
-  // uma sessão existente.
+  // está "Lendo" no momento. Se houver mais de um "Lendo", prioriza o que
+  // está marcado como "atual" no Painel; se essa preferência não existir ou
+  // não corresponder a nenhum livro "Lendo" agora, cai no desempate por
+  // sessão mais recente. Não faz nada se a pessoa já escolheu um livro
+  // manualmente ou se está editando uma sessão existente.
   function selecionarLivroPadrao() {
     if (editandoSessaoID) return;
     if (livroInput.value.trim()) return;
@@ -503,9 +522,14 @@ const Leitura = (() => {
 
     let livroPadrao = lendo[0];
     if (lendo.length > 1) {
-      const sessaoRecente = sessoesCache.find(sess => lendo.some(l => l.ID === sess.LivroID));
-      if (sessaoRecente) {
-        livroPadrao = lendo.find(l => l.ID === sessaoRecente.LivroID);
+      const preferido = livroAtualPreferidoID && lendo.find(l => l.ID === livroAtualPreferidoID);
+      if (preferido) {
+        livroPadrao = preferido;
+      } else {
+        const sessaoRecente = sessoesCache.find(sess => lendo.some(l => l.ID === sess.LivroID));
+        if (sessaoRecente) {
+          livroPadrao = lendo.find(l => l.ID === sessaoRecente.LivroID);
+        }
       }
     }
 
@@ -516,7 +540,67 @@ const Leitura = (() => {
       Páginas totais: ${livroPadrao.NúmeroPáginas || '?'} | Status: ${livroPadrao.Status} | Lidas: ${livroPadrao.PáginasLidasAcumuladas || 0}
     `;
     atualizarMediaSession(livroPadrao);
+    preencherPaginaInicialComUltima(livroPadrao);
   }
+
+  // Busca qual livro está marcado como "atual" no Painel (mesma preferência
+  // usada lá pras setas de navegação entre livros "Lendo"), pra usar como
+  // critério de desempate aqui. Falha silenciosa: sem essa informação, o
+  // desempate simplesmente cai no critério antigo (sessão mais recente).
+  async function carregarLivroAtualPreferido() {
+    try {
+      const configs = await API.enviar({ acao: 'getConfigs' });
+      livroAtualPreferidoID = (configs && configs.livroAtualID) || null;
+    } catch (e) {
+      livroAtualPreferidoID = null;
+    }
+  }
+
+  // Pré-preenche a "Página inicial" com a última página lida do livro — na
+  // grande maioria das sessões é exatamente onde a próxima leitura começa,
+  // então isso poupa o passo mais chato de abrir o formulário: descobrir e
+  // digitar esse número toda vez. Nunca sobrescreve algo que a pessoa já
+  // tenha digitado manualmente.
+  function preencherPaginaInicialComUltima(livro) {
+    if (pagInicial.value) return;
+    const ultimaPagina = Number(livro.PáginasLidasAcumuladas) || 0;
+    if (ultimaPagina > 0) {
+      pagInicial.value = ultimaPagina;
+      calcularPaginas();
+    }
+  }
+
+  // Pedido explícito pra continuar UM livro específico (vindo do botão
+  // "Continuar lendo" do Painel, ou de um atalho do PWA). Só marca a
+  // intenção aqui — quem efetivamente aplica é o init(), depois que
+  // carregarLivros() traz os dados atualizados desse livro (evita usar
+  // números desatualizados vindos de outra tela).
+  function continuarLivro(id) {
+    continuarLivroID = id;
+  }
+
+  function aplicarContinuarLivro(id) {
+    const livro = livrosCache.find(l => l.ID === id);
+    if (!livro) {
+      // Livro não encontrado (ex.: foi excluído nesse meio tempo) — cai no
+      // comportamento padrão em vez de deixar o formulário vazio.
+      selecionarLivroPadrao();
+      return;
+    }
+    editandoSessaoID = null;
+    const texto = `${livro.Título} - ${livro.Autor} (${livro.Status})`;
+    livroInput.value = texto;
+    livroInfo.innerHTML = `
+      <strong>${livro.Título}</strong> | ${livro.Autor}<br>
+      Páginas totais: ${livro.NúmeroPáginas || '?'} | Status: ${livro.Status} | Lidas: ${livro.PáginasLidasAcumuladas || 0}
+    `;
+    atualizarMediaSession(livro);
+    preencherPaginaInicialComUltima(livro);
+    // O único campo que realmente falta preencher é onde parou — já deixa o
+    // teclado pronto ali.
+    pagFinal.focus();
+  }
+
 
   function calcularTempo() {
     // Se o cronômetro foi usado (com ou sem pausas), esse é o tempo real de
@@ -976,7 +1060,7 @@ const Leitura = (() => {
     }
   }
 
-  return { init };
+  return { init, continuarLivro };
 })();
 
 if (document.readyState === 'loading') {
