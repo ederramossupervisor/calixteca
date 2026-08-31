@@ -16,6 +16,22 @@ const Dashboard = (() => {
 
     console.log('📊 Carregando dashboard...');
 
+    // Liga o botão "Continuar lendo" uma única vez (a cada visita ao Painel
+    // o dataset.livroId é atualizado em renderizarLivroAtual(), então não
+    // precisa religar o listener toda vez).
+    const btnContinuar = document.getElementById('btn-continuar-lendo');
+    if (btnContinuar && !btnContinuar.dataset.listenerLigado) {
+      btnContinuar.addEventListener('click', () => {
+        const id = btnContinuar.dataset.livroId;
+        if (!id) return;
+        activatePageGlobal('leitura');
+        if (typeof Leitura !== 'undefined' && Leitura.continuarLivro) {
+          Leitura.continuarLivro(id);
+        }
+      });
+      btnContinuar.dataset.listenerLigado = '1';
+    }
+
     // Mostra o que já temos em cache local na hora (stale-while-revalidate),
     // sem esperar a rede pra pintar a tela — só cai no skeleton se não
     // houver nada salvo ainda.
@@ -363,6 +379,12 @@ const Dashboard = (() => {
           : '';
       }
 
+      const btnContinuar = document.getElementById('btn-continuar-lendo');
+      if (btnContinuar) {
+        btnContinuar.classList.remove('d-none');
+        btnContinuar.dataset.livroId = livro.ID;
+      }
+
       // Cor dinâmica extraída da capa (ver Util.extrairCorMedia) — aplica no
       // card via CSS custom property; se a imagem não puder ser lida (ex.:
       // CORS), simplesmente não colore nada, sem quebrar a tela.
@@ -423,6 +445,8 @@ const Dashboard = (() => {
       if (previsaoEl) previsaoEl.classList.add('d-none');
       if (tempoRestEl) tempoRestEl.classList.add('d-none');
       if (containerCard) containerCard.style.setProperty('--capa-cor', 'transparent');
+      const btnContinuar = document.getElementById('btn-continuar-lendo');
+      if (btnContinuar) btnContinuar.classList.add('d-none');
     }
   }
 
