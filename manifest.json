@@ -18,9 +18,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Registrar Sessão",
-      "short_name": "Sessão",
-      "description": "Ir para registro de leitura",
+      "name": "Continuar Lendo",
+      "short_name": "Continuar",
+      "description": "Ir direto para a sessão do livro que você está lendo",
       "url": "./index.html?page=leitura",
       "icons": [
         {
