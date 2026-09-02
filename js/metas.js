@@ -143,7 +143,6 @@ const Metas = (() => {
 
     const grid = document.getElementById('conquistas-grid');
     if (!grid) return;
-    grid.innerHTML = '';
 
     const icones = {
       'Primeiro livro': 'fa-book',
@@ -164,19 +163,60 @@ const Metas = (() => {
       'Viajante literário': 'fa-map-marked-alt'
     };
 
+    // TODO: confira estes textos com a lógica real de checkAchievements (Apps Script) —
+    // são descrições estimadas a partir do nome de cada conquista e podem não bater
+    // exatamente com os critérios/valores usados no backend.
+    const descricoes = {
+      'Primeiro livro': 'Registre a leitura do seu primeiro livro.',
+      'Leitor iniciante': 'Termine de ler alguns livros para começar sua jornada.',
+      'Leitor dedicado': 'Mantenha uma boa quantidade de livros lidos.',
+      'Devorador de livros': 'Leia muitos livros em pouco tempo.',
+      'Página 1000': 'Leia um total acumulado de 1.000 páginas.',
+      'Página 5000': 'Leia um total acumulado de 5.000 páginas.',
+      'Maratona de 7 dias': 'Leia por 7 dias seguidos, sem parar.',
+      'Maratona de 30 dias': 'Leia por 30 dias seguidos, sem parar.',
+      'Livro gigante': 'Termine um livro muito extenso (com muitas páginas).',
+      'Favorito': 'Marque um livro como favorito.',
+      'Leitor global': 'Leia livros de autores ou origens de vários países.',
+      'Leitor noturno': 'Registre sessões de leitura durante a madrugada/noite.',
+      'Colecionador de clássicos': 'Leia obras clássicas da literatura.',
+      'Diversidade literária': 'Leia livros de gêneros bem variados.',
+      'Anotador': 'Crie várias anotações vinculadas aos seus livros.',
+      'Viajante literário': 'Registre sessões de leitura em locais diferentes.'
+    };
+
     const nomesObtidos = conquistas.map(c => c.Nome);
+
+    // Descarta tooltips antigos antes de recriar o grid (evita instâncias órfãs)
+    grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      const inst = bootstrap.Tooltip.getInstance(el);
+      if (inst) inst.dispose();
+    });
+    grid.innerHTML = '';
 
     Object.keys(icones).forEach(nome => {
       const obtida = nomesObtidos.includes(nome);
+      const descricao = descricoes[nome] || 'Continue usando o app para descobrir como desbloquear.';
       const col = document.createElement('div');
       col.className = 'col-6 col-md-4 col-lg-3 col-xl-2';
       col.innerHTML = `
-        <div class="conquista-card ${obtida ? 'conquistada' : ''}">
+        <div class="conquista-card ${obtida ? 'conquistada' : ''}"
+             tabindex="0"
+             data-bs-toggle="tooltip"
+             data-bs-placement="top"
+             data-bs-trigger="hover focus"
+             data-bs-title="${Util.escapeHTML(descricao)}">
           <div class="conquista-badge mx-auto mb-2"><i class="fas ${icones[nome]} fa-2x"></i></div>
           <strong>${nome}</strong>
           ${obtida ? '<span class="badge bg-success d-block mt-1">Conquistada</span>' : '<span class="badge bg-light text-muted d-block mt-1">Bloqueada</span>'}
         </div>`;
       grid.appendChild(col);
+    });
+
+    // Inicializa os tooltips do Bootstrap (funciona com mouse e toque,
+    // pois o cartão é focável via tabindex="0")
+    grid.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      new bootstrap.Tooltip(el);
     });
 
     document.getElementById('verificar-conquistas-btn').onclick = async () => {
