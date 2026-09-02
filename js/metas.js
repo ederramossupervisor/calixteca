@@ -145,23 +145,41 @@ const Metas = (() => {
     if (!grid) return;
 
     const icones = {
-      'Primeiro livro': 'fa-book',
-      'Leitor iniciante': 'fa-book-open',
-      'Leitor dedicado': 'fa-award',
-      'Devorador de livros': 'fa-fire',
-      'Página 1000': 'fa-file-alt',
-      'Página 5000': 'fa-copy',
-      'Maratona de 7 dias': 'fa-calendar-check',
-      'Maratona de 30 dias': 'fa-calendar-alt',
-      'Livro gigante': 'fa-weight-hanging',
-      'Favorito': 'fa-star',
-      'Leitor global': 'fa-globe-americas',
-      'Leitor noturno': 'fa-moon',
-      'Colecionador de clássicos': 'fa-landmark',
-      'Diversidade literária': 'fa-rainbow',
-      'Anotador': 'fa-pen',
-      'Viajante literário': 'fa-map-marked-alt'
-    };
+  // Antigas
+  'Primeiro livro': 'fa-book',
+  'Leitor iniciante': 'fa-book-open',
+  'Leitor dedicado': 'fa-award',
+  'Devorador de livros': 'fa-fire',
+  'Página 1000': 'fa-file-alt',
+  'Página 5000': 'fa-copy',
+  'Maratona de 7 dias': 'fa-calendar-check',
+  'Maratona de 30 dias': 'fa-calendar-alt',
+  'Livro gigante': 'fa-weight-hanging',
+  'Favorito': 'fa-star',
+  'Leitor global': 'fa-globe-americas',
+  'Leitor noturno': 'fa-moon',
+  'Colecionador de clássicos': 'fa-landmark',
+  'Diversidade literária': 'fa-rainbow',
+  'Anotador': 'fa-pen',
+  'Viajante literário': 'fa-map-marked-alt',
+
+  // Novas
+  'Leitor constante': 'fa-hourglass-half',
+  'Maratonista': 'fa-stopwatch',
+  'Meta de livros cumprida': 'fa-bullseye',
+  'Meta de páginas cumprida': 'fa-file-alt',
+  'Explorador de locais': 'fa-map-pin',
+  'Cidadão do mundo': 'fa-earth-americas',
+  'Página 10000': 'fa-layer-group',
+  'Página 15000': 'fa-layer-group',
+  'Página 20000': 'fa-layer-group',
+  'Livro gigante plus': 'fa-book',
+  'Cinco livros grandes': 'fa-books',
+  'Sete livros médios': 'fa-books',
+  'Dez livros compactos': 'fa-books',
+  'Sequência de 100 dias': 'fa-calendar-check',
+  'Colecionador de clássicos avançado': 'fa-landmark'
+};
 
     const descricoes = {
   'Primeiro livro': 'Finalizar o primeiro livro',
