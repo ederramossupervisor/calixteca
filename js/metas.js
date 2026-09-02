@@ -209,10 +209,10 @@ const Metas = (() => {
   'Página 10000': 'Ler 10.000 páginas',
   'Página 15000': 'Ler 15.000 páginas',
   'Página 20000': 'Ler 20.000 páginas',
-  'Livro gigante plus': 'Ter um livro com mais de 1.000 páginas',
-  'Cinco livros grandes': 'Ter 5 livros com mais de 500 páginas',
-  'Sete livros médios': 'Ter 7 livros com mais de 400 páginas',
-  'Dez livros compactos': 'Ter 10 livros com mais de 300 páginas',
+  'Livro gigante plus': 'Ler um livro com mais de 1.000 páginas',
+  'Cinco livros grandes': 'Ler 5 livros com mais de 500 páginas',
+  'Sete livros médios': 'Ler 7 livros com mais de 400 páginas',
+  'Dez livros compactos': 'Ler 10 livros com mais de 300 páginas',
   'Sequência de 100 dias': 'Ler por 100 dias consecutivos',
   'Colecionador de clássicos avançado': 'Ler 25 livros clássicos'
 };
