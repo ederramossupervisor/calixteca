@@ -163,26 +163,23 @@ const Metas = (() => {
       'Viajante literário': 'fa-map-marked-alt'
     };
 
-    // TODO: confira estes textos com a lógica real de checkAchievements (Apps Script) —
-    // são descrições estimadas a partir do nome de cada conquista e podem não bater
-    // exatamente com os critérios/valores usados no backend.
     const descricoes = {
-      'Primeiro livro': 'Registre a leitura do seu primeiro livro.',
-      'Leitor iniciante': 'Termine de ler alguns livros para começar sua jornada.',
-      'Leitor dedicado': 'Mantenha uma boa quantidade de livros lidos.',
-      'Devorador de livros': 'Leia muitos livros em pouco tempo.',
-      'Página 1000': 'Leia um total acumulado de 1.000 páginas.',
-      'Página 5000': 'Leia um total acumulado de 5.000 páginas.',
-      'Maratona de 7 dias': 'Leia por 7 dias seguidos, sem parar.',
-      'Maratona de 30 dias': 'Leia por 30 dias seguidos, sem parar.',
-      'Livro gigante': 'Termine um livro muito extenso (com muitas páginas).',
-      'Favorito': 'Marque um livro como favorito.',
-      'Leitor global': 'Leia livros de autores ou origens de vários países.',
-      'Leitor noturno': 'Registre sessões de leitura durante a madrugada/noite.',
-      'Colecionador de clássicos': 'Leia obras clássicas da literatura.',
-      'Diversidade literária': 'Leia livros de gêneros bem variados.',
-      'Anotador': 'Crie várias anotações vinculadas aos seus livros.',
-      'Viajante literário': 'Registre sessões de leitura em locais diferentes.'
+      'Primeiro livro': 'Finalizar o primeiro livro',
+      'Leitor iniciante': 'Finalizar 5 livros',
+      'Leitor dedicado': 'Finalizar 10 livros',
+      'Devorador de livros': 'Finalizar 20 livros',
+      'Página 1000': 'Ler 1.000 páginas',
+      'Página 5000': 'Ler 5.000 páginas',
+      'Maratona de 7 dias': 'Ler por 7 dias consecutivos',
+      'Maratona de 30 dias': 'Ler por 30 dias consecutivos',
+      'Livro gigante': 'Finalizar um livro com mais de 500 páginas',
+      'Favorito': 'Marcar um livro como favorito',
+      'Leitor global': 'Ler livros em 3 idiomas diferentes',
+      'Leitor noturno': 'Ler um livro em formato digital',
+      'Colecionador de clássicos': 'Ler 3 livros clássicos',
+      'Diversidade literária': 'Ler 5 gêneros diferentes',
+      'Anotador': 'Fazer 10 anotações',
+      'Viajante literário': 'Ler autores de 3 nacionalidades diferentes'
     };
 
     const nomesObtidos = conquistas.map(c => c.Nome);
