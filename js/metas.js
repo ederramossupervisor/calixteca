@@ -193,7 +193,7 @@ const Metas = (() => {
   'Livro gigante': 'Finalizar um livro com mais de 500 páginas',
   'Favorito': 'Marcar um livro como favorito',
   'Leitor global': 'Ler livros em 3 idiomas diferentes',
-  'Leitor noturno': 'Ler um livro em formato digital',
+  'Leitor noturno': 'Ler durante a noite (após as 22h ou antes das 5h)',
   'Colecionador de clássicos': 'Ler 3 livros clássicos',
   'Diversidade literária': 'Ler 5 gêneros diferentes',
   'Anotador': 'Fazer 10 anotações',
