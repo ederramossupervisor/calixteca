@@ -164,24 +164,40 @@ const Metas = (() => {
     };
 
     const descricoes = {
-      'Primeiro livro': 'Finalizar o primeiro livro',
-      'Leitor iniciante': 'Finalizar 5 livros',
-      'Leitor dedicado': 'Finalizar 10 livros',
-      'Devorador de livros': 'Finalizar 20 livros',
-      'Página 1000': 'Ler 1.000 páginas',
-      'Página 5000': 'Ler 5.000 páginas',
-      'Maratona de 7 dias': 'Ler por 7 dias consecutivos',
-      'Maratona de 30 dias': 'Ler por 30 dias consecutivos',
-      'Livro gigante': 'Finalizar um livro com mais de 500 páginas',
-      'Favorito': 'Marcar um livro como favorito',
-      'Leitor global': 'Ler livros em 3 idiomas diferentes',
-      'Leitor noturno': 'Ler um livro em formato digital',
-      'Colecionador de clássicos': 'Ler 3 livros clássicos',
-      'Diversidade literária': 'Ler 5 gêneros diferentes',
-      'Anotador': 'Fazer 10 anotações',
-      'Viajante literário': 'Ler autores de 3 nacionalidades diferentes'
-    };
-
+  'Primeiro livro': 'Finalizar o primeiro livro',
+  'Leitor iniciante': 'Finalizar 5 livros',
+  'Leitor dedicado': 'Finalizar 10 livros',
+  'Devorador de livros': 'Finalizar 20 livros',
+  'Página 1000': 'Ler 1.000 páginas',
+  'Página 5000': 'Ler 5.000 páginas',
+  'Maratona de 7 dias': 'Ler por 7 dias consecutivos',
+  'Maratona de 30 dias': 'Ler por 30 dias consecutivos',
+  'Livro gigante': 'Finalizar um livro com mais de 500 páginas',
+  'Favorito': 'Marcar um livro como favorito',
+  'Leitor global': 'Ler livros em 3 idiomas diferentes',
+  'Leitor noturno': 'Ler um livro em formato digital',
+  'Colecionador de clássicos': 'Ler 3 livros clássicos',
+  'Diversidade literária': 'Ler 5 gêneros diferentes',
+  'Anotador': 'Fazer 10 anotações',
+  'Viajante literário': 'Ler autores de 3 nacionalidades diferentes',
+  
+  // Novas conquistas
+  'Leitor constante': 'Acumular 100 horas de leitura',
+  'Maratonista': 'Fazer uma sessão de leitura de mais de 2 horas',
+  'Meta de livros cumprida': 'Atingir a meta anual de livros',
+  'Meta de páginas cumprida': 'Atingir a meta anual de páginas',
+  'Explorador de locais': 'Registrar sessões em 5 locais diferentes',
+  'Cidadão do mundo': 'Ler autores de 15 nacionalidades diferentes',
+  'Página 10000': 'Ler 10.000 páginas',
+  'Página 15000': 'Ler 15.000 páginas',
+  'Página 20000': 'Ler 20.000 páginas',
+  'Livro gigante plus': 'Ter um livro com mais de 1.000 páginas',
+  'Cinco livros grandes': 'Ter 5 livros com mais de 500 páginas',
+  'Sete livros médios': 'Ter 7 livros com mais de 400 páginas',
+  'Dez livros compactos': 'Ter 10 livros com mais de 300 páginas',
+  'Sequência de 100 dias': 'Ler por 100 dias consecutivos',
+  'Colecionador de clássicos avançado': 'Ler 25 livros clássicos'
+};
     const nomesObtidos = conquistas.map(c => c.Nome);
 
     // Descarta tooltips antigos antes de recriar o grid (evita instâncias órfãs)
