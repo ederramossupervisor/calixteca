@@ -174,9 +174,9 @@ const Metas = (() => {
   'Página 15000': 'fa-layer-group',
   'Página 20000': 'fa-layer-group',
   'Livro gigante plus': 'fa-book',
-  'Cinco livros grandes': 'fa-books',
-  'Sete livros médios': 'fa-books',
-  'Dez livros compactos': 'fa-books',
+  'Cinco livros grandes': 'fa-book-bookmark',
+  'Sete livros médios': 'fa-book-reader',
+  'Dez livros compactos': 'fa-th-list',
   'Sequência de 100 dias': 'fa-calendar-check',
   'Colecionador de clássicos avançado': 'fa-landmark'
 };
