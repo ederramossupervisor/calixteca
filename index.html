@@ -264,21 +264,23 @@
           </div>
         </div>
 
-        <!-- Gráfico últimos 7 dias -->
+        <!-- Timeline de atividades: feed unificado (sessões, livros, anotações,
+             conquistas/metas batidas), mais recente no topo, com scroll infinito
+             buscando páginas antigas sob demanda no Apps Script (js/timeline.js) -->
         <div class="card mt-3 shadow-sm">
           <div class="card-body">
-            <h5>Últimos 30 dias</h5>
-            <div style="position: relative;">
-              <canvas id="grafico-semanal" height="100"></canvas>
-              <span id="badge-total-30dias" class="badge bg-primary" 
-                    style="position: absolute; top: -10px; right: 10px; font-size: 0.75rem; 
-                           padding: 4px 8px; border-radius: 10px; 
-                           box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                0 pág.
-              </span>
+            <h5>Atividades</h5>
+            <div id="timeline-container">
+              <div class="text-muted small" id="timeline-vazio">Nenhuma atividade registrada ainda.</div>
             </div>
+            <div id="timeline-sentinela" class="text-center py-2 d-none">
+              <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+              </div>
+            </div>
+            <div id="timeline-fim" class="text-muted small text-center py-2 d-none">Fim do histórico.</div>
           </div>
-        </div> <!-- fecha o último card (gráfico) -->
+        </div> <!-- fecha o último card (timeline) -->
       </div> <!-- fecha container py-4 -->
     </div> <!-- fecha page-dashboard -->
 
