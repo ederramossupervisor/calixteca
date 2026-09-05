@@ -1,5 +1,4 @@
 const Dashboard = (() => {
-  let chartInstance = null;
   let currentLivroIndex = 0;
   let livrosLendoList = [];
   let livroAtualID = null;
@@ -26,8 +25,7 @@ const Dashboard = (() => {
         temCacheLocal = true;
         ocultarSkeletons();
         preencherCards(cached);
-        if (cached.paginasUltimos7Dias) criarGrafico(cached.paginasUltimos7Dias);
-      } else {
+        } else {
         mostrarSkeletons();
       }
     } catch (e) {
@@ -39,7 +37,6 @@ const Dashboard = (() => {
       if (dados && !dados.erro) {
         ocultarSkeletons();
         preencherCards(dados);
-        criarGrafico(dados.paginasUltimos7Dias);
         DB.salvarDashboard(dados).catch(e => console.warn('Cache dashboard falhou:', e));
       } else {
         throw new Error(dados?.erro || 'Dados inválidos');
@@ -62,6 +59,9 @@ const Dashboard = (() => {
     // Últimos livros lidos (capas) — busca à parte, mesmo padrão do
     // mini-heatmap: não atrasa nem quebra o resto do Dashboard se falhar.
     carregarUltimosLidos();
+    // Timeline de atividades (scroll infinito) — módulo à parte (js/timeline.js),
+    // não atrasa nem quebra o resto do Dashboard se falhar.
+    if (typeof Timeline !== 'undefined') Timeline.init();
   }
 
   async function carregarUltimosLidos() {
@@ -314,14 +314,6 @@ const Dashboard = (() => {
     barra.style.width = d.percentualMeta + '%';
     barra.textContent = d.percentualMeta + '%';
     barra.setAttribute('aria-valuenow', d.percentualMeta);
-
-    // Badge com total de páginas dos últimos 30 dias
-    const total30dias = d.paginasUltimos7Dias.reduce((acc, dia) => acc + dia.paginas, 0);
-    const badge = document.getElementById('badge-total-30dias');
-    if (badge) {
-      badge.textContent = `${total30dias} pág.`;
-      badge.title = `Total de páginas lidas nos últimos 30 dias`;
-    }
   }
 
   function animarContador(id, valorFinal) {
@@ -491,61 +483,6 @@ const Dashboard = (() => {
       const diff = e.changedTouches[0].screenX - touchStartX;
       if (Math.abs(diff) > 50) mudarLivro(diff > 0 ? -1 : 1);
       touchStartX = 0;
-    });
-  }
-
-  function criarGrafico(dados) {
-    if (chartInstance) chartInstance.destroy();
-    const ctx = document.getElementById('grafico-semanal')?.getContext('2d');
-    if (!ctx) return;
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, '#7C8F76');
-    gradient.addColorStop(1, '#46543F');
-
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: dados.map(item => item.dia),
-        datasets: [{
-          label: 'Páginas lidas',
-          data: dados.map(item => item.paginas),
-          backgroundColor: gradient,
-          borderRadius: 6,
-          borderSkipped: false,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: function(items) {
-                const idx = items[0].dataIndex;
-                return `Dia ${dados[idx].dia}`;
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { stepSize: 10, font: { size: 10 } }
-          },
-          x: {
-            grid: { display: false },
-            ticks: {
-              maxTicksLimit: 12,
-              autoSkip: true,
-              font: { size: 9 }
-            }
-          }
-        }
-      }
     });
   }
 
