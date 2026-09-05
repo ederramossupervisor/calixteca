@@ -265,3 +265,4 @@
   font-size: 0.72rem;
   margin-top: 2px;
 }
+.timeline-marcador-status { background: var(--primary); }
