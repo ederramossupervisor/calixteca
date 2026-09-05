@@ -9,7 +9,7 @@ const API = (() => {
   // Ações somente-leitura: seguras para reaproveitar respostas recentes em
   // memória. Qualquer ação fora desta lista é tratada como mutação e limpa
   // o cache inteiro após concluir com sucesso.
-  const ACOES_CACHEAVEIS = new Set([
+    const ACOES_CACHEAVEIS = new Set([
     'getConfigs',
     'listAllBooks',
     'listBooks',
@@ -18,7 +18,8 @@ const API = (() => {
     'listQuotes',
     'listWishes',
     'listLoans',
-    'dashboard'
+    'dashboard',
+    'timelineAtividades'
   ]);
 
   const CACHE_TTL_MS = 45000; // 45s
