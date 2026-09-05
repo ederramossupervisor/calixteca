@@ -500,3 +500,72 @@ if (document.readyState === 'loading') {
     Dashboard.init();
   }
 }
+
+
+/* Timeline de atividades (js/timeline.js): feed vertical com marcadores por
+   tipo de evento (sessão, livro, anotação, conquista) e scroll infinito. */
+#timeline-container {
+  position: relative;
+  margin-top: 4px;
+}
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.timeline-item:last-child {
+  border-bottom: none;
+}
+.timeline-marcador {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--secondary);
+}
+.timeline-marcador-sessao { background: var(--primary); }
+.timeline-marcador-livro { background: var(--secondary); }
+.timeline-marcador-anotacao { background: var(--text-secondary); }
+.timeline-marcador-conquista { background: var(--accent); }
+.timeline-corpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.timeline-capa {
+  width: 34px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.timeline-texto {
+  min-width: 0;
+  flex: 1;
+}
+.timeline-titulo {
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-detalhe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.timeline-data {
+  font-size: 0.72rem;
+  margin-top: 2px;
+}
