@@ -92,8 +92,13 @@ const Timeline = (() => {
       temMais = false;
     } finally {
       carregando = false;
-      if (alvoSentinela) alvoSentinela.classList.add('d-none');
+      // A sentinela só pode ficar escondida (d-none) quando realmente não
+      // há mais itens: como IntersectionObserver não detecta elementos com
+      // display:none, escondê-la incondicionalmente aqui travava o scroll
+      // infinito depois da primeira página (ela nunca mais "reaparecia"
+      // pro observer notar a rolagem seguinte).
       if (!temMais) {
+        if (alvoSentinela) alvoSentinela.classList.add('d-none');
         const fim = elFim();
         if (fim && cursorAntesDe) fim.classList.remove('d-none');
       }
