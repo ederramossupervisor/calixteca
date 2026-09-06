@@ -197,9 +197,9 @@
   transform: scale(1.15);
 }
 
-
 /* Timeline de atividades (js/timeline.js): feed vertical com marcadores por
-   tipo de evento (sessão, livro, anotação, conquista) e scroll infinito. */
+   tipo de evento (livro adicionado/começou/finalizado/abandonado, anotação,
+   conquista) e scroll infinito. */
 #timeline-container {
   position: relative;
   margin-top: 4px;
@@ -225,8 +225,10 @@
   color: #fff;
   background: var(--secondary);
 }
-.timeline-marcador-sessao { background: var(--primary); }
-.timeline-marcador-livro { background: var(--secondary); }
+.timeline-marcador-livro { background: #8B7D6B; }              /* taupe — mesmo tom do badge "Quero ler" */
+.timeline-marcador-livro-comecou { background: #5C6B5A; }      /* musgo — mesmo tom do badge "Lendo" */
+.timeline-marcador-livro-finalizado { background: #7A8B5E; }   /* oliva — mesmo tom do badge "Finalizado" */
+.timeline-marcador-livro-abandonado { background: #8B4A3D; }   /* vinho — mesmo tom do badge "Abandonado" */
 .timeline-marcador-anotacao { background: var(--text-secondary); }
 .timeline-marcador-conquista { background: var(--accent); }
 .timeline-corpo {
@@ -265,4 +267,3 @@
   font-size: 0.72rem;
   margin-top: 2px;
 }
-.timeline-marcador-status { background: var(--primary); }
