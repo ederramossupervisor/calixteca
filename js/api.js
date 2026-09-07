@@ -19,7 +19,8 @@ const API = (() => {
     'listWishes',
     'listLoans',
     'dashboard',
-    'timelineAtividades'
+    'timelineAtividades',
+    'buscarPalavra'
   ]);
 
   const CACHE_TTL_MS = 45000; // 45s
