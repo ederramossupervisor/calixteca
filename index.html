@@ -63,13 +63,13 @@
         <i class="fas fa-book fa-sm"></i>
         <small class="d-block text-nowrap">Biblioteca</small>
       </a>
-      <a href="#" class="nav-item text-center px-1" data-page="adicionar">
-        <i class="fas fa-plus-circle fa-sm"></i>
-        <small class="d-block text-nowrap">Adicionar</small>
-      </a>
       <a href="#" class="nav-item text-center px-1" data-page="leitura">
         <i class="fas fa-clock fa-sm"></i>
         <small class="d-block text-nowrap">Registrar</small>
+      </a>
+      <a href="#" class="nav-item text-center px-1" data-page="estatisticas">
+        <i class="fas fa-chart-pie fa-sm"></i>
+        <small class="d-block text-nowrap">Estatísticas</small>
       </a>
       <a href="#" class="nav-item text-center px-1" data-page="leitor">
         <i class="fas fa-book-open fa-sm"></i>
@@ -89,7 +89,7 @@
     <div class="offcanvas-body">
       <nav class="nav flex-column">
         <a href="#" class="nav-link" data-page="desejos"><i class="fas fa-heart me-2"></i> Desejos</a>
-        <a href="#" class="nav-link" data-page="estatisticas"><i class="fas fa-chart-pie me-2"></i> Estatísticas</a>
+        <a href="#" class="nav-link" data-page="adicionar"><i class="fas fa-plus-circle me-2"></i> Adicionar</a>
         <a href="#" class="nav-link" data-page="metas"><i class="fas fa-bullseye me-2"></i> Metas</a>
         <a href="#" class="nav-link" data-page="anotacoes"><i class="fas fa-sticky-note me-2"></i> Anotações</a>
         <a href="#" class="nav-link" data-page="exportar"><i class="fas fa-download me-2"></i> Exportar</a>
@@ -576,6 +576,11 @@
                       <button id="btn-pausar" class="btn btn-warning btn-sm d-none"><i class="fas fa-pause"></i> Pausar</button>
                       <button id="btn-retomar" class="btn btn-info btn-sm d-none"><i class="fas fa-play"></i> Retomar</button>
                       <button id="btn-finalizar" class="btn btn-danger btn-sm d-none"><i class="fas fa-stop"></i> Finalizar</button>
+                    </div>
+                    <div class="mt-2">
+                      <button type="button" id="btn-buscar-palavra" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-buscar-palavra">
+                        <i class="fas fa-book-open"></i> Buscar palavra
+                      </button>
                     </div>
                   </div>
 
@@ -1670,6 +1675,30 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para buscar o significado de uma palavra durante a leitura -->
+  <div class="modal fade" id="modal-buscar-palavra" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Buscar palavra</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group mb-2">
+            <input type="text" id="palavra-buscar-input" class="form-control" placeholder="Digite ou fale a palavra..." autocomplete="off">
+            <button type="button" id="btn-voz-palavra" class="btn btn-outline-secondary" title="Falar a palavra">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button type="button" id="btn-confirmar-busca-palavra" class="btn btn-primary" title="Buscar">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div id="resultado-busca-palavra" class="small"></div>
         </div>
       </div>
     </div>
