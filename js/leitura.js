@@ -22,6 +22,13 @@ const Leitura = (() => {
   const btnFinalizar = document.getElementById('btn-finalizar');
   const tempoAtivoInput = document.getElementById('tempo-ativo-minutos');
 
+  // Busca de palavra durante a leitura
+  const modalBuscarPalavraEl = document.getElementById('modal-buscar-palavra');
+  const inputPalavraBusca = document.getElementById('palavra-buscar-input');
+  const btnVozPalavra = document.getElementById('btn-voz-palavra');
+  const btnConfirmarBuscaPalavra = document.getElementById('btn-confirmar-busca-palavra');
+  const resultadoBuscaPalavra = document.getElementById('resultado-busca-palavra');
+
   let livrosCache = [];
   let sessoesCache = [];
   let editandoSessaoID = null;
@@ -33,6 +40,7 @@ const Leitura = (() => {
   let animFrameId = null;
   let recognition = null;
   let targetInput = null;
+  let estavaRodandoAntesBusca = false; // pra saber se retoma o cronômetro ao fechar a busca de palavra
 
   // Container e template para múltiplas anotações
   let containerAnotacoes = null;
@@ -145,6 +153,69 @@ const Leitura = (() => {
     btnPausar.addEventListener('click', pausarCronometro);
     btnRetomar.addEventListener('click', retomarCronometro);
     btnFinalizar.addEventListener('click', finalizarCronometro);
+
+    // --- Busca de palavra durante a leitura ---
+    async function buscarPalavraDicionario() {
+      const palavra = inputPalavraBusca.value.trim();
+      if (!palavra) return;
+      resultadoBuscaPalavra.innerHTML = '<span class="text-muted">Buscando...</span>';
+      try {
+        const resp = await API.enviar({ acao: 'buscarPalavra', palavra: palavra });
+        if (!resp || !resp.encontrada || !resp.definicoes || !resp.definicoes.length) {
+          resultadoBuscaPalavra.innerHTML = '<span class="text-muted">Não encontrei essa palavra.</span>';
+          return;
+        }
+        resultadoBuscaPalavra.innerHTML = resp.definicoes.map(function(d) {
+          return '<div class="mb-1">' + (d.classe ? '<em>' + d.classe + '</em> ' : '') + d.definicao + '</div>';
+        }).join('');
+      } catch (e) {
+        resultadoBuscaPalavra.innerHTML = '<span class="text-danger">Erro ao buscar a palavra.</span>';
+      }
+    }
+
+    if (btnConfirmarBuscaPalavra) btnConfirmarBuscaPalavra.addEventListener('click', buscarPalavraDicionario);
+    if (inputPalavraBusca) {
+      inputPalavraBusca.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); buscarPalavraDicionario(); }
+      });
+    }
+
+    if (btnVozPalavra) {
+      btnVozPalavra.addEventListener('click', () => {
+        if (!recognition) {
+          Util.toast('Reconhecimento de voz não suportado neste navegador.', 'warning');
+          return;
+        }
+        if (targetInput === inputPalavraBusca) {
+          recognition.stop();
+          return;
+        }
+        if (targetInput) recognition.stop();
+        targetInput = inputPalavraBusca;
+        btnVozPalavra.classList.add('btn-recording', 'btn-danger');
+        btnVozPalavra.innerHTML = '<i class="fas fa-stop"></i>';
+        recognition.start();
+      });
+    }
+
+    // Pausa automaticamente o cronômetro (se estiver ativo) enquanto o
+    // modal de busca está aberto, e retoma sozinho ao fechar — a busca da
+    // palavra não deveria contar como tempo de leitura.
+    if (modalBuscarPalavraEl) {
+      modalBuscarPalavraEl.addEventListener('show.bs.modal', () => {
+        estavaRodandoAntesBusca = cronometroAtivo;
+        if (cronometroAtivo) pausarCronometro();
+        inputPalavraBusca.value = '';
+        resultadoBuscaPalavra.innerHTML = '';
+      });
+      modalBuscarPalavraEl.addEventListener('hidden.bs.modal', () => {
+        if (targetInput === inputPalavraBusca) recognition.stop();
+        if (estavaRodandoAntesBusca) {
+          retomarCronometro();
+          estavaRodandoAntesBusca = false;
+        }
+      });
+    }
 
     // Configura múltiplas anotações
     containerAnotacoes = document.getElementById('anotacoes-sessao-container');
