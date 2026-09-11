@@ -289,14 +289,135 @@ const Leitura = (() => {
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = 'playing';
         }
+      } else if (document.visibilityState === 'hidden') {
+        // Tela sendo escondida/app indo pra segundo plano é o momento mais
+        // provável de o app ser fechado/encerrado pelo sistema sem aviso,
+        // então é aqui que salvamos o rascunho da sessão em andamento.
+        salvarRascunho();
       }
     });
+
+    // Fallback: 'pagehide' cobre o fechamento real da aba/app, que às vezes
+    // não passa pelo 'visibilitychange' (ex.: alguns navegadores desktop).
+    window.addEventListener('pagehide', salvarRascunho);
 
     // Carrega livros e histórico juntos e só então escolhe o livro padrão do
     // select, já que essa escolha depende dos dois (status "Lendo" vem dos
     // livros, e o desempate por sessão mais recente vem do histórico).
-    Promise.all([carregarLivros(), carregarHistorico()]).then(selecionarLivroPadrao);
+    Promise.all([carregarLivros(), carregarHistorico()]).then(() => {
+      // Se havia uma sessão em andamento que não foi finalizada/registrada
+      // (aba fechada, app derrubado, etc.), recupera ela em vez de aplicar
+      // a seleção padrão de livro.
+      if (!restaurarRascunhoSeExistir()) {
+        selecionarLivroPadrao();
+      }
+    });
     console.log('✅ Módulo Leitura pronto.');
+  }
+
+  // --- Persistência da sessão em andamento (recuperação após fechar o app) ---
+  const CHAVE_RASCUNHO = 'calixteca_sessao_rascunho';
+
+  function salvarRascunho() {
+    // Só vale a pena persistir se já existe algo em andamento (cronômetro
+    // rodando ou pausado com tempo acumulado). Sem isso, não grava rascunho.
+    if (!cronometroAtivo && tempoAcumulado === 0) {
+      limparRascunho();
+      return;
+    }
+    const rascunho = {
+      livroTexto: livroInput.value,
+      data: dataInput.value,
+      horaInicio: horaInicio.value,
+      paginaInicial: pagInicial.value,
+      local: document.getElementById('local-sessao')?.value || '',
+      tempoAcumulado,
+      cronometroAtivo,
+      inicioCronometro,
+      salvoEm: Date.now()
+    };
+    try {
+      localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(rascunho));
+    } catch (erro) {
+      console.warn('Não foi possível salvar o rascunho da sessão:', erro);
+    }
+  }
+
+  function limparRascunho() {
+    try {
+      localStorage.removeItem(CHAVE_RASCUNHO);
+    } catch (erro) {
+      // Ignora — nada crítico se não der pra limpar.
+    }
+  }
+
+  function restaurarRascunhoSeExistir() {
+    // Se o cronômetro já está ativo ou já tem tempo acumulado em memória, é
+    // porque a sessão já está rolando nesta mesma execução do app (só
+    // navegamos entre telas) — não há nada a recuperar do localStorage.
+    if (cronometroAtivo || tempoAcumulado > 0) return false;
+
+    let bruto;
+    try {
+      bruto = localStorage.getItem(CHAVE_RASCUNHO);
+    } catch (erro) {
+      return false;
+    }
+    if (!bruto) return false;
+
+    let rascunho;
+    try {
+      rascunho = JSON.parse(bruto);
+    } catch (erro) {
+      limparRascunho();
+      return false;
+    }
+
+    // Congela o tempo decorrido até o instante do último salvamento do
+    // rascunho (se estava rodando, soma o intervalo entre o último início e
+    // esse salvamento). Não tenta estimar quanto tempo passou desde então —
+    // quem decide se retoma ou finaliza é o usuário.
+    let tempoCongelado = rascunho.tempoAcumulado || 0;
+    if (rascunho.cronometroAtivo && rascunho.inicioCronometro) {
+      tempoCongelado += Math.max(0, rascunho.salvoEm - rascunho.inicioCronometro);
+    }
+
+    if (tempoCongelado <= 0 && !rascunho.livroTexto) {
+      limparRascunho();
+      return false;
+    }
+
+    if (rascunho.livroTexto) {
+      livroInput.value = rascunho.livroTexto;
+      livroInput.dispatchEvent(new Event('change'));
+    }
+    if (rascunho.data) dataInput.value = rascunho.data;
+    if (rascunho.horaInicio) horaInicio.value = rascunho.horaInicio;
+    if (rascunho.paginaInicial) pagInicial.value = rascunho.paginaInicial;
+    const localInput = document.getElementById('local-sessao');
+    if (localInput && rascunho.local) localInput.value = rascunho.local;
+
+    tempoAcumulado = tempoCongelado;
+    cronometroAtivo = false;
+    inicioCronometro = null;
+
+    const totalSeg = Math.floor(tempoAcumulado / 1000);
+    const mins = Math.floor(totalSeg / 60);
+    const secs = totalSeg % 60;
+    display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    if (tempoAtivoInput) {
+      tempoAtivoInput.value = Math.max(1, Math.round(tempoAcumulado / 60000));
+    }
+    btnIniciar.classList.add('d-none');
+    btnPausar.classList.add('d-none');
+    btnRetomar.classList.remove('d-none');
+    btnFinalizar.classList.remove('d-none');
+    horaInicio.disabled = true;
+    horaFim.disabled = true;
+
+    Util.toast(`Sessão anterior recuperada (${mins} min já contabilizados). Toque em Retomar para continuar ou em Finalizar para registrar.`, 'info');
+
+    return true;
   }
 
   function configurarMediaSession() {
@@ -425,6 +546,7 @@ const Leitura = (() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'playing';
     }
+    salvarRascunho();
   }
 
     function pausarCronometro() {
@@ -448,6 +570,7 @@ const Leitura = (() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused';
     }
+    salvarRascunho();
   }
 
     function retomarCronometro() {
@@ -471,6 +594,7 @@ const Leitura = (() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'playing';
     }
+    salvarRascunho();
   }
   
     function finalizarCronometro() {
@@ -504,6 +628,10 @@ const Leitura = (() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'none';
     }
+    // Mantém o rascunho salvo (com o tempo final já congelado): o usuário
+    // ainda precisa clicar em "Registrar Sessão" pra concluir, e se fechar
+    // o app antes disso não pode perder o tempo que acabou de finalizar.
+    salvarRascunho();
   }
   
     function resetarCronometro() {
@@ -531,6 +659,9 @@ const Leitura = (() => {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'none';
     }
+    // Sessão registrada com sucesso ou descartada de propósito (botão
+    // "Limpar") — não há mais nada em andamento pra recuperar depois.
+    limparRascunho();
   }
   
   async function carregarLivros() {
