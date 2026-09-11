@@ -304,7 +304,6 @@ const Leitura = (() => {
   // Apenas configura os action handlers – não inicia áudio ainda.
   const actionHandlers = [
     ['play', () => { if (!cronometroAtivo) iniciarCronometro(); }],
-    ['pause', () => { if (cronometroAtivo) pausarCronometro(); }],
     ['stop', () => { finalizarCronometro(); }]
   ];
   for (const [action, handler] of actionHandlers) {
