@@ -61,6 +61,16 @@ const Biblioteca = (() => {
         aplicarFiltros();
       });
     });
+
+    // Botão flutuante de adicionar livro (canto da página Biblioteca)
+    const btnFabAdicionar = document.getElementById('btn-fab-adicionar-livro');
+    if (btnFabAdicionar) {
+      btnFabAdicionar.addEventListener('click', () => {
+        if (typeof activatePageGlobal === 'function') {
+          activatePageGlobal('adicionar');
+        }
+      });
+    }
   }
 
   function textoSeguro(valor) {
