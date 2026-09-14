@@ -73,11 +73,18 @@ const Util = {
   // capa em si. Resolve com "r, g, b" (pra usar em rgba(...)) ou null se a
   // imagem não puder ser lida (ex.: sem CORS liberado pelo servidor da
   // imagem — falha silenciosa, não deve quebrar a tela).
+  //
+  // Não define img.crossOrigin: as capas vêm do Google Drive, que nunca
+  // libera CORS nesse endpoint de thumbnail — pedir modo CORS só gera erro
+  // barulhento no console (imagem chega a falhar o carregamento) sem nunca
+  // funcionar. Sem crossOrigin a imagem carrega normalmente para exibição;
+  // o canvas fica "manchado" (tainted) e getImageData() lança uma exceção,
+  // que já é tratada no catch abaixo — mesmo resultado (sem cor extraída),
+  // sem barulho no console.
   extrairCorMedia: function(urlImagem) {
     return new Promise((resolve) => {
       if (!urlImagem) { resolve(null); return; }
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       img.onload = () => {
         try {
           const tamanho = 40;

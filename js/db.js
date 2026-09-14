@@ -104,7 +104,15 @@ const DB = (() => {
   }
 
   async function salvarMetas(meta) {
-    await db.metas.put(meta);
+    if (!meta) return;
+    // A tabela usa 'Ano' (maiúsculo) como chave primária, mas o objeto que
+    // vem da API usa 'ano' (minúsculo) — sem isso o Dexie não acha o valor
+    // da chave e recusa o put(). Espelha o valor em 'Ano' sem mexer no
+    // objeto original nem exigir migração de versão do banco.
+    const paraSalvar = (meta.Ano === undefined && meta.ano !== undefined)
+      ? { ...meta, Ano: meta.ano }
+      : meta;
+    await db.metas.put(paraSalvar);
   }
 
   async function obterMetas(ano) {
