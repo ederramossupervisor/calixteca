@@ -114,6 +114,7 @@
 
 /* Botão flutuante (FAB) de adicionar livro — discreto, mas de fácil acesso */
 .fab-adicionar-livro {
+  display: none; /* só aparece na página Biblioteca (controlado via JS) */
   position: fixed;
   right: 1.25rem;
   bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
@@ -144,6 +145,11 @@
 }
 .fab-adicionar-livro:active {
   transform: scale(0.96);
+}
+.fab-adicionar-livro.visivel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* No mobile, a barra inferior fica fixa: sobe o botão pra não sobrepor */

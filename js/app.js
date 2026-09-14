@@ -121,6 +121,12 @@ function activatePageGlobal(pageName) {
     }
   });
 
+  // Botão flutuante de adicionar livro: só faz sentido na página Biblioteca
+  const fabAdicionarLivro = document.getElementById('btn-fab-adicionar-livro');
+  if (fabAdicionarLivro) {
+    fabAdicionarLivro.classList.toggle('visivel', pageName === 'biblioteca');
+  }
+
   // Sempre abre a página nova no topo, em vez de manter a posição de
   // rolagem que a página anterior deixou (senão a nova página pode abrir
   // no meio/final dependendo de onde o usuário parou na página anterior).
