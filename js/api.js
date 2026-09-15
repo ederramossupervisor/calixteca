@@ -84,6 +84,27 @@ const API = (() => {
     return 0;
   }
 
+  // Datas "YYYY-MM-DD" vindas do Supabase (colunas DATE, sem hora/fuso) são
+  // interpretadas pelo JS como meia-noite EM UTC se usarmos `new Date(str)`
+  // direto — o que desloca o dia em fusos negativos como o do Brasil
+  // (vira o dia anterior à noite). parseDataLocal cria a data à meia-noite
+  // no fuso LOCAL do navegador, e formatDataLocal faz o caminho inverso.
+  function parseDataLocal(valor) {
+    if (!valor) return null;
+    const s = String(valor);
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function formatDataLocal(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+    const y = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${mm}-${dd}`;
+  }
+
   // ========== LIVROS ==========
   async function adicionarLivro(book) {
     const row = mapLivroInput(book);
@@ -206,7 +227,7 @@ const API = (() => {
     let totalSessoes = 0; let dataUltimaSessao = null;
     (sessoes || []).forEach((s) => {
       totalSessoes += Number(s.paginas_lidas) || 0;
-      const d = s.data ? new Date(s.data) : null;
+      const d = s.data ? parseDataLocal(s.data) : null;
       if (d && !isNaN(d.getTime()) && (!dataUltimaSessao || d > dataUltimaSessao)) dataUltimaSessao = d;
     });
 
@@ -224,7 +245,7 @@ const API = (() => {
       updates.status = 'Finalizado';
       if (!livro.data_termino) {
         const dataTerminoAuto = dataUltimaSessao || new Date();
-        updates.data_termino = dataTerminoAuto.toISOString().slice(0, 10);
+        updates.data_termino = formatDataLocal(dataTerminoAuto);
       }
     } else if (novoTotal > 0 && statusAtual === 'Quero ler') {
       updates.status = 'Lendo';
@@ -242,7 +263,7 @@ const API = (() => {
     if (error) throw new Error(error.message);
     const diasUnicosSet = new Set();
     (data || []).forEach((r) => {
-      const d = r.data ? new Date(r.data) : null;
+      const d = r.data ? parseDataLocal(r.data) : null;
       if (d && !isNaN(d.getTime())) diasUnicosSet.add(d.toDateString());
     });
     const diasUnicos = Array.from(diasUnicosSet);
@@ -283,7 +304,7 @@ const API = (() => {
     const livrosComSessao = {};
     sessoesData.forEach((s) => {
       if (s.livro_id) livrosComSessao[s.livro_id] = true;
-      const d = s.data ? new Date(s.data) : null;
+      const d = s.data ? parseDataLocal(s.data) : null;
       if (d && !isNaN(d.getTime()) && d.getFullYear() === ano) totalSessoesNoAno += Number(s.paginas_lidas) || 0;
     });
 
@@ -294,7 +315,7 @@ const API = (() => {
       if (anoExtra === ano) totalExtras += Number(l.paginas_extra) || 0;
       if (livrosComSessao[l.id]) return;
       if (l.status !== 'Finalizado') return;
-      const dataTermino = l.data_termino ? new Date(l.data_termino) : null;
+      const dataTermino = l.data_termino ? parseDataLocal(l.data_termino) : null;
       const pagBase = Number(l.paginas_anos_anteriores) || 0;
       const pagLidas = Number(l.paginas_lidas) || 0;
       const numPag = Number(l.numero_paginas) || 0;
@@ -351,7 +372,7 @@ const API = (() => {
 
     const sessoesRaw = await todos('sessoes', 'data,tempo,paginas_lidas,livro_id');
     const sessoes = sessoesRaw.map((s) => ({
-      data: s.data ? new Date(s.data) : null, tempo: Number(s.tempo) || 0,
+      data: s.data ? parseDataLocal(s.data) : null, tempo: Number(s.tempo) || 0,
       paginas: Number(s.paginas_lidas) || 0, livroID: s.livro_id || ''
     })).filter((s) => s.data && !isNaN(s.data.getTime()));
 
@@ -381,7 +402,7 @@ const API = (() => {
 
     livrosData.forEach((row) => {
       const status = row.status;
-      const dataTermino = row.data_termino ? new Date(row.data_termino) : null;
+      const dataTermino = row.data_termino ? parseDataLocal(row.data_termino) : null;
       if (status === 'Finalizado') {
         if (dataTermino && !isNaN(dataTermino.getTime())) {
           if (dataTermino.getFullYear() === anoAtual) {
@@ -444,7 +465,7 @@ const API = (() => {
 
     const sessRaw = await todos('sessoes', 'data,tempo,paginas_lidas,livro_id');
     const todasSessoes = sessRaw.map((r) => ({
-      data: r.data ? new Date(r.data) : null, tempo: Number(r.tempo) || 0,
+      data: r.data ? parseDataLocal(r.data) : null, tempo: Number(r.tempo) || 0,
       paginas: Number(r.paginas_lidas) || 0, livroID: r.livro_id || ''
     })).filter((s) => s.data && !isNaN(s.data.getTime()));
     const sessoes = todasSessoes.filter((s) => s.data >= inicioAno && s.data <= fimAno);
@@ -453,7 +474,7 @@ const API = (() => {
     const todosLivros = livrosRaw.map((l) => ({
       ID: l.id, titulo: l.titulo || '', autor: l.autor || '', editora: l.editora || '', genero: l.genero || '',
       numPag: Number(l.numero_paginas) || 0, status: l.status || '',
-      dataTermino: l.data_termino ? new Date(l.data_termino) : null
+      dataTermino: l.data_termino ? parseDataLocal(l.data_termino) : null
     }));
     const livrosAno = todosLivros.filter((l) => l.status === 'Finalizado' && l.dataTermino && l.dataTermino.getFullYear() === ano);
 
@@ -507,7 +528,7 @@ const API = (() => {
     const diasNoAno = (ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0)) ? 366 : 365;
     for (let h = diasNoAno - 1; h >= 0; h--) {
       const diaHeat = new Date(fimAno); diaHeat.setHours(0, 0, 0, 0); diaHeat.setDate(diaHeat.getDate() - h);
-      heatmap.push({ data: diaHeat.toISOString().slice(0, 10), paginas: paginasPorDataStrAno[diaHeat.toDateString()] || 0 });
+      heatmap.push({ data: formatDataLocal(diaHeat), paginas: paginasPorDataStrAno[diaHeat.toDateString()] || 0 });
     }
 
     const insights = [];
@@ -537,7 +558,7 @@ const API = (() => {
     const sessRaw = await todos('sessoes', 'data,tempo,paginas_lidas');
     let minutosAno = 0, paginasViaSessoes = 0; const diasUnicos = {};
     sessRaw.forEach((r) => {
-      const d = r.data ? new Date(r.data) : null;
+      const d = r.data ? parseDataLocal(r.data) : null;
       if (d && !isNaN(d.getTime()) && d.getFullYear() === ano) {
         minutosAno += Number(r.tempo) || 0; paginasViaSessoes += Number(r.paginas_lidas) || 0;
         diasUnicos[d.toDateString()] = true;
@@ -550,7 +571,7 @@ const API = (() => {
     let livrosFinalizadosAno = 0; const generosCont = {}, autoresCont = {};
     livrosRaw.forEach((l) => {
       if (l.status !== 'Finalizado') return;
-      const dataTermino = l.data_termino ? new Date(l.data_termino) : null;
+      const dataTermino = l.data_termino ? parseDataLocal(l.data_termino) : null;
       if (!(dataTermino && !isNaN(dataTermino.getTime()) && dataTermino.getFullYear() === ano)) return;
       livrosFinalizadosAno++;
       const genero = (l.genero || '').toString().trim();
@@ -574,13 +595,13 @@ const API = (() => {
     const data = await todos('sessoes', 'data,paginas_lidas');
     const paginasPorDia = {};
     data.forEach((r) => {
-      const d = r.data ? new Date(r.data) : null;
+      const d = r.data ? parseDataLocal(r.data) : null;
       if (d && !isNaN(d.getTime())) { const key = d.toDateString(); paginasPorDia[key] = (paginasPorDia[key] || 0) + (Number(r.paginas_lidas) || 0); }
     });
     const resultado = []; const hoje = new Date();
     for (let k = dias - 1; k >= 0; k--) {
       const dia = new Date(hoje); dia.setDate(dia.getDate() - k);
-      resultado.push({ data: dia.toISOString().slice(0, 10), paginas: paginasPorDia[dia.toDateString()] || 0 });
+      resultado.push({ data: formatDataLocal(dia), paginas: paginasPorDia[dia.toDateString()] || 0 });
     }
     return resultado;
   }
@@ -592,14 +613,14 @@ const API = (() => {
     livrosRaw.forEach((l) => {
       livrosMap[l.id] = {
         genero: (l.genero || '').toString().trim() || 'Sem gênero', nota: Number(l.nota) || 0, status: l.status || '',
-        dataInicio: l.data_inicio ? new Date(l.data_inicio) : null, dataTermino: l.data_termino ? new Date(l.data_termino) : null
+        dataInicio: l.data_inicio ? parseDataLocal(l.data_inicio) : null, dataTermino: l.data_termino ? parseDataLocal(l.data_termino) : null
       };
     });
 
     const sessRaw = await todos('sessoes', 'data,hora_inicio,tempo,paginas_lidas,livro_id,local,humor,clima');
     const sessoes = [];
     sessRaw.forEach((r) => {
-      const data = r.data ? new Date(r.data) : null;
+      const data = r.data ? parseDataLocal(r.data) : null;
       const tempo = Number(r.tempo) || 0;
       const paginas = Number(r.paginas_lidas) || 0;
       if (!data || isNaN(data.getTime()) || tempo <= 0) return;
@@ -779,14 +800,14 @@ const API = (() => {
     const livrosData = await todos('livros', 'status,data_termino');
     let livrosFinalizadosAno = 0;
     livrosData.forEach((l) => {
-      const dataTermino = l.data_termino ? new Date(l.data_termino) : null;
+      const dataTermino = l.data_termino ? parseDataLocal(l.data_termino) : null;
       const terminouEsteAno = (dataTermino && !isNaN(dataTermino.getTime()) && dataTermino.getFullYear() === anoAtual);
       if (l.status === 'Finalizado' && (terminouEsteAno || !dataTermino)) livrosFinalizadosAno++;
     });
     const paginasLidasAno = await _paginasLidasNoAno(anoAtual);
 
     const inicioMes = new Date(anoAtual, mesAtual, 1);
-    const { data: sessMes, error: e2 } = await sb.from('sessoes').select('paginas_lidas').gte('data', inicioMes.toISOString().slice(0, 10));
+    const { data: sessMes, error: e2 } = await sb.from('sessoes').select('paginas_lidas').gte('data', formatDataLocal(inicioMes));
     if (e2) throw new Error(e2.message);
     let paginasLidasMes = 0;
     (sessMes || []).forEach((s) => { paginasLidasMes += Number(s.paginas_lidas) || 0; });
@@ -872,7 +893,7 @@ const API = (() => {
 
     let livrosFinalizadosAno = 0;
     livros.forEach((l) => {
-      const dataTerminoL = l.data_termino ? new Date(l.data_termino) : null;
+      const dataTerminoL = l.data_termino ? parseDataLocal(l.data_termino) : null;
       const terminouEsteAno = (dataTerminoL && !isNaN(dataTerminoL.getTime()) && dataTerminoL.getFullYear() === anoAtual);
       if (l.status === 'Finalizado' && (terminouEsteAno || !dataTerminoL)) livrosFinalizadosAno++;
     });
@@ -934,7 +955,7 @@ const API = (() => {
     const ultimaSessaoPorLivro = {};
     sessData.forEach((s) => {
       if (!s.data) return;
-      const dSess = new Date(s.data);
+      const dSess = parseDataLocal(s.data);
       if (isNaN(dSess.getTime())) return;
       const minutosInicioSess = _paraMinutosDoDia(s.hora_inicio);
       if (minutosInicioSess > 0) dSess.setHours(Math.floor(minutosInicioSess / 60), minutosInicioSess % 60, 0, 0);
@@ -957,7 +978,7 @@ const API = (() => {
         if (!isNaN(dCad.getTime())) eventos.push({ tipo: 'livro', data: dCad.toISOString(), titulo, detalhe: 'Adicionado à biblioteca' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book', livroID: l.id, urlCapa });
       }
       if (l.status === 'Finalizado') {
-        let dFinal = l.data_termino ? new Date(l.data_termino) : null;
+        let dFinal = l.data_termino ? parseDataLocal(l.data_termino) : null;
         const ultimaSessao = ultimaSessaoPorLivro[l.id];
         if (ultimaSessao) {
           dFinal = new Date(ultimaSessao.timestamp);
@@ -1004,10 +1025,10 @@ const API = (() => {
     const sessoesData = await todos('sessoes', 'data,livro_id');
     const calendario = {};
     sessoesData.forEach((s) => {
-      const dataSess = new Date(s.data);
+      const dataSess = parseDataLocal(s.data);
       if (isNaN(dataSess.getTime())) return;
       if (dataSess.getFullYear() !== ano || dataSess.getMonth() + 1 !== mes) return;
-      const dateStr = dataSess.toISOString().split('T')[0];
+      const dateStr = formatDataLocal(dataSess);
       if (!calendario[dateStr]) calendario[dateStr] = [];
       const jaExiste = calendario[dateStr].some((l) => l.id === s.livro_id);
       if (!jaExiste && livrosMap[s.livro_id]) calendario[dateStr].push({ id: s.livro_id, titulo: livrosMap[s.livro_id].titulo, urlCapa: livrosMap[s.livro_id].urlCapa });
@@ -1021,7 +1042,7 @@ const API = (() => {
       const dataAnot = new Date(a.data);
       if (isNaN(dataAnot.getTime())) return;
       if (dataAnot.getFullYear() !== ano || dataAnot.getMonth() + 1 !== mes) return;
-      const anotDateStr = dataAnot.toISOString().split('T')[0];
+      const anotDateStr = formatDataLocal(dataAnot);
       if (!citacoes.includes(anotDateStr)) citacoes.push(anotDateStr);
     });
     return { dias: calendario, citacoes };
@@ -1113,7 +1134,7 @@ const API = (() => {
 
   // ========== EMPRÉSTIMOS ==========
   async function adicionarEmprestimo(e) {
-    const row = { livro_id: e.livroID || null, para_quem: e.paraQuem || '', data_emprestimo: e.dataEmprestimo || new Date().toISOString().split('T')[0], previsao_devolucao: e.previsaoDevolucao || null, status: 'Emprestado' };
+    const row = { livro_id: e.livroID || null, para_quem: e.paraQuem || '', data_emprestimo: e.dataEmprestimo || formatDataLocal(new Date()), previsao_devolucao: e.previsaoDevolucao || null, status: 'Emprestado' };
     const { data, error } = await sb.from('emprestimos').insert(row).select('id').single();
     if (error) throw new Error(error.message);
     return { status: 'ok', id: data.id };
@@ -1124,13 +1145,13 @@ const API = (() => {
     const emprestimos = data.map((e) => {
       let status = e.status;
       if (status === 'Emprestado' && e.previsao_devolucao) {
-        const previsao = new Date(e.previsao_devolucao);
+        const previsao = parseDataLocal(e.previsao_devolucao);
         if (hoje > previsao) status = 'Atrasado';
       }
       return { ID: e.id, LivroID: e.livro_id, ParaQuem: e.para_quem || '', 'DataEmpréstimo': e.data_emprestimo || '', 'PrevisãoDevolução': e.previsao_devolucao || '', Status: status };
     });
     const ordemStatus = { Atrasado: 0, Emprestado: 1, Devolvido: 2 };
-    emprestimos.sort((a, b) => (ordemStatus[a.Status] || 99) - (ordemStatus[b.Status] || 99) || new Date(b['DataEmpréstimo']) - new Date(a['DataEmpréstimo']));
+    emprestimos.sort((a, b) => (ordemStatus[a.Status] || 99) - (ordemStatus[b.Status] || 99) || parseDataLocal(b['DataEmpréstimo']) - parseDataLocal(a['DataEmpréstimo']));
     return emprestimos;
   }
   async function devolverEmprestimo(id) {
