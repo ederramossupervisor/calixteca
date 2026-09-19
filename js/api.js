@@ -115,8 +115,50 @@ const API = (() => {
   }
   async function listarLivros() { return (await todos('livros')).map(mapLivroResumo); }
   async function listarLivrosCompleto() { return (await todos('livros')).map(mapLivroFull); }
+  // PATCH de verdade: só entram no UPDATE os campos que vieram em
+  // `novosDados`. Antes disso usava mapLivroInput (pensada pra INSERT, com
+  // valor padrão pra tudo que não vier preenchido) — então uma chamada
+  // parcial, como { nota: 5 } ao clicar nas estrelas, sobrescrevia a linha
+  // inteira no Supabase e apagava Título, Status, Datas etc. de volta para
+  // os valores padrão (ex.: Status virava "Quero ler" de novo).
+  function mapLivroPartial(book) {
+    const row = {};
+    const tem = (chave) => Object.prototype.hasOwnProperty.call(book || {}, chave);
+
+    if (tem('titulo')) row.titulo = book.titulo || '';
+    if (tem('subtitulo')) row.subtitulo = book.subtitulo || '';
+    if (tem('autor')) row.autor = book.autor || '';
+    if (tem('editora')) row.editora = book.editora || '';
+    if (tem('ano')) row.ano = book.ano || '';
+    if (tem('edicao')) row.edicao = book.edicao || '';
+    if (tem('isbn')) row.isbn = book.isbn || '';
+    if (tem('idioma')) row.idioma = book.idioma || '';
+    if (tem('nacionalidadeAutor')) row.nacionalidade_autor = book.nacionalidadeAutor || '';
+    if (tem('numeroPaginas')) row.numero_paginas = Number(book.numeroPaginas) || 0;
+    if (tem('formato')) row.formato = book.formato || 'Físico';
+    if (tem('genero')) row.genero = book.genero || '';
+    if (tem('subgenero')) row.subgenero = book.subgenero || '';
+    if (tem('status')) row.status = book.status || 'Quero ler';
+    if (tem('dataInicio')) row.data_inicio = book.dataInicio || null;
+    if (tem('dataTermino')) row.data_termino = book.dataTermino || null;
+    if (tem('nota')) row.nota = (book.nota !== undefined && book.nota !== '') ? Number(book.nota) : null;
+    if (tem('avaliacao')) row.avaliacao = book.avaliacao || '';
+    if (tem('favorito')) row.favorito = !!book.favorito;
+    if (tem('classico')) row.classico = !!book.classico;
+    if (tem('preco')) row.preco = (book.preco !== undefined && book.preco !== '') ? Number(book.preco) : null;
+    if (tem('localCompra')) row.local_compra = book.localCompra || '';
+    if (tem('tags')) row.tags = book.tags || '';
+    if (tem('observacoes')) row.observacoes = book.observacoes || '';
+    if (tem('imagemCapa')) row.imagem_capa = book.imagemCapa || '';
+    if (tem('urlCapa')) row.url_capa = book.urlCapa || '';
+    if (tem('paginasAnosAnteriores')) row.paginas_anos_anteriores = Number(book.paginasAnosAnteriores) || 0;
+    if (tem('paginasExtra')) row.paginas_extra = Number(book.paginasExtra) || 0;
+    if (tem('paginasExtraAno')) row.paginas_extra_ano = book.paginasExtraAno || null;
+
+    return row;
+  }
   async function atualizarLivro(id, novosDados) {
-    const row = mapLivroInput(novosDados);
+    const row = mapLivroPartial(novosDados);
     row.ultima_atualizacao = new Date().toISOString();
     const { error } = await sb.from('livros').update(row).eq('id', id);
     if (error) throw new Error(error.message);
@@ -541,7 +583,7 @@ const API = (() => {
       insights.push('Seu maior livro finalizado em ' + ano + ' possui ' + maiorLivro.numPag + ' páginas (' + maiorLivro.titulo + ').');
     }
 
-    const paginasAno = await _paginasLidasNoAno(ano);
+    const paginasAno2 = await _paginasLidasNoAno(ano);
     return {
       ano, finalizadosPorMes: { labels: labelsMeses, valores: finalizadosPorMes },
       paginasPorDia: { labels: labelsDias, valores: paginasPorDia },
@@ -549,7 +591,7 @@ const API = (() => {
       tempoPorDiaSemana: { labels: diasDaSemana, valores: tempoPorDiaSemana }, velocidadeMedia,
       velocidadeMensal: { labels: labelsMesesVelocidade, valores: velocidadeMensalValores },
       topAutores, topEditoras, heatmap, insights, totalLivros: livrosAno.length,
-      totalPaginas: paginasAno, paginasAno, totalHoras: (totalMinutosAno / 60).toFixed(1)
+      totalPaginas: paginasAno2, paginasAno: paginasAno2, totalHoras: (totalMinutosAno / 60).toFixed(1)
     };
   }
 
