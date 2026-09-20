@@ -51,13 +51,14 @@ const Dashboard = (() => {
       }
     }
 
-    // Mini-heatmap dos últimos dias — busca à parte, sem atrasar/quebrar
-    // o resto do Dashboard se falhar (mesmo padrão do Insights Avançados em
-    // Estatísticas). Requer a ação 'heatmapRecente' no Code.gs.
-    carregarMiniHeatmap();
+    // Mapa de calor de leitura (mês por vez, com pílulas Jan-Dez) — busca à
+    // parte, sem atrasar/quebrar o resto do Dashboard se falhar (mesmo
+    // padrão do Insights Avançados em Estatísticas). Movido de Estatísticas
+    // pra cá; usa a ação 'heatmapAno'.
+    carregarHeatmapDashboard();
 
     // Últimos livros lidos (capas) — busca à parte, mesmo padrão do
-    // mini-heatmap: não atrasa nem quebra o resto do Dashboard se falhar.
+    // mapa de calor: não atrasa nem quebra o resto do Dashboard se falhar.
     carregarUltimosLidos();
     // Timeline de atividades (scroll infinito) — módulo à parte (js/timeline.js),
     // não atrasa nem quebra o resto do Dashboard se falhar.
@@ -144,14 +145,7 @@ const Dashboard = (() => {
     }, 200);
   });
 
-  // No mobile a fileira única de 70 quadradinhos fica fina demais pra ser
-  // útil (cada célula vira uma tira de poucos pixels). Em telas estreitas
-  // pedimos só as últimas 2 semanas e desenhamos um grid de 7 colunas com
-  // células bem maiores — igual ao desktop segue mostrando os ~70 dias
-  // na fileira única, que ali tem espaço de sobra.
   const MOBILE_BREAKPOINT = 767;
-  const DIAS_MOBILE = 14;
-  const DIAS_DESKTOP = 70;
 
   function ehMobile() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
@@ -163,102 +157,152 @@ const Dashboard = (() => {
   let ultimosLidosTodos = []; // lista completa (já filtrada/ordenada) em cache local
   let resizeTimer = null;
 
-  async function carregarMiniHeatmap() {
-    const container = document.getElementById('mini-heatmap-container');
+  /* ==================== MAPA DE CALOR DE LEITURA ====================
+     Movido de Estatísticas pro Dashboard: mini calendário de um mês por
+     vez, com uma faixa de 12 pílulas (Jan a Dez) como seletor. Sempre
+     mostra o ano corrente (o Dashboard não tem seletor de ano). Cada
+     bloquinho mostra a quantidade de páginas lidas naquele dia (no centro)
+     e o dia do mês bem pequeno no canto superior esquerdo. */
+  const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const DIAS_SEMANA_ABREV = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  const anoHeatmap = new Date().getFullYear();
+  let mesHeatmapSelecionado = new Date().getMonth() + 1;
+  let heatmapMapaPaginasAtual = {};
+  let heatmapMaxPagAtual = 1;
+
+  function temaEscuro() {
+    return document.body.classList.contains('dark-mode');
+  }
+
+  function diasNoMesHeatmap(ano, mes) {
+    return new Date(ano, mes, 0).getDate(); // mes 1-12
+  }
+
+  function formatarDataBrasileira(iso) {
+    const partes = iso.split('-');
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  async function carregarHeatmapDashboard() {
+    const container = document.getElementById('heatmap-container');
     if (!container) return;
-    const totalDias = ehMobile() ? DIAS_MOBILE : DIAS_DESKTOP;
     try {
-      const dias = await API.enviar({ acao: 'heatmapRecente', dias: totalDias });
-      if (Array.isArray(dias)) renderizarMiniHeatmap(dias);
+      const resp = await API.enviar({ acao: 'heatmapAno', ano: anoHeatmap });
+      if (resp && Array.isArray(resp.heatmap)) criarHeatmapDashboard(resp.heatmap);
     } catch (e) {
-      console.warn('Falha ao carregar mini-heatmap:', e);
+      console.warn('Falha ao carregar mapa de calor:', e);
     }
   }
 
-  function renderizarMiniHeatmap(dias) {
-    const container = document.getElementById('mini-heatmap-container');
-    if (!container || !dias || !dias.length) return;
+  function criarHeatmapDashboard(heatmapData) {
+    const container = document.getElementById('heatmap-container');
+    if (!container) return;
     container.innerHTML = '';
 
-    // Modo compacto: grid de 7 colunas com células grandes e rótulo do dia
-    // da semana — usado quando já pedimos um recorte curto (mobile).
-    const modoCompacto = dias.length <= 14;
+    heatmapMapaPaginasAtual = {};
+    heatmapMaxPagAtual = 1;
+    if (heatmapData && heatmapData.length) {
+      heatmapData.forEach(d => { heatmapMapaPaginasAtual[d.data] = d.paginas; });
+      heatmapMaxPagAtual = Math.max(...heatmapData.map(d => d.paginas), 1);
+    }
 
-    const maxPag = Math.max(...dias.map(d => d.paginas), 1);
-    const hojeISO = new Date().toISOString().split('T')[0];
-    const diasSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-
-    function formatarDataBrasileira(iso) {
-      const partes = iso.split('-');
-      return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-    function temaEscuro() {
-      return document.body.classList.contains('dark-mode');
-    }
-    function corCelula(intensidade) {
-      if (temaEscuro()) {
-        if (intensidade === 0) return '#2A2820';
-        if (intensidade < 0.25) return '#3D4739';
-        if (intensidade < 0.5) return '#526350';
-        if (intensidade < 0.75) return '#6E8266';
-        return '#9DAE96';
-      }
-      if (intensidade === 0) return '#EDEAE2';
-      if (intensidade < 0.25) return '#C9D2C4';
-      if (intensidade < 0.5) return '#9DAE96';
-      if (intensidade < 0.75) return '#6E8266';
-      return '#46543F';
-    }
+    const seletor = document.createElement('div');
+    seletor.className = 'heatmap-seletor-mes';
+    MESES_ABREV.forEach((nomeMes, idx) => {
+      const mes = idx + 1;
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = 'heatmap-mes-pill' + (mes === mesHeatmapSelecionado ? ' ativo' : '');
+      pill.textContent = nomeMes;
+      pill.addEventListener('click', () => {
+        mesHeatmapSelecionado = mes;
+        renderizarMesHeatmapDashboard();
+      });
+      seletor.appendChild(pill);
+    });
+    container.appendChild(seletor);
 
     const grid = document.createElement('div');
-    grid.className = modoCompacto ? 'heatmap-grid heatmap-grid-compacta' : 'heatmap-grid';
-    if (modoCompacto) {
-      // 7 colunas fixas (uma por dia da semana); o próprio grid quebra em
-      // duas fileiras quando são 14 dias.
-      grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-    } else {
-      // Uma única fileira: o número de colunas acompanha a quantidade de
-      // dias, pra cada quadradinho ocupar uma fração igual da largura da
-      // linha.
-      grid.style.gridTemplateColumns = `repeat(${dias.length}, 1fr)`;
-    }
+    grid.id = 'heatmap-mes-grid';
+    container.appendChild(grid);
 
-    if (modoCompacto) {
-      dias.forEach(dia => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'heatmap-celula-wrapper';
+    renderizarMesHeatmapDashboard();
+  }
 
-        const label = document.createElement('div');
-        label.className = 'heatmap-dia-label';
-        const dataObj = new Date(dia.data + 'T00:00:00');
-        label.textContent = diasSemana[dataObj.getDay()];
-        wrapper.appendChild(label);
+  function renderizarMesHeatmapDashboard() {
+    const grid = document.getElementById('heatmap-mes-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
 
-        const cell = document.createElement('div');
-        cell.className = 'heatmap-cell';
-        const intensidade = dia.paginas / maxPag;
-        cell.style.backgroundColor = corCelula(intensidade);
-        cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
-        if (dia.paginas > 0) cell.textContent = dia.paginas;
-        if (dia.data === hojeISO) cell.classList.add('heatmap-cell-hoje');
-        wrapper.appendChild(cell);
-
-        grid.appendChild(wrapper);
-      });
-      container.appendChild(grid);
-      return;
-    }
-
-    dias.forEach(dia => {
-      const cell = document.createElement('div');
-      cell.className = 'heatmap-cell';
-      const intensidade = dia.paginas / maxPag;
-      cell.style.backgroundColor = corCelula(intensidade);
-      cell.title = `${formatarDataBrasileira(dia.data)}: ${dia.paginas} página${dia.paginas === 1 ? '' : 's'}`;
-      grid.appendChild(cell);
+    document.querySelectorAll('#heatmap-container .heatmap-mes-pill').forEach((pill, idx) => {
+      pill.classList.toggle('ativo', idx + 1 === mesHeatmapSelecionado);
     });
 
-    container.appendChild(grid);
+    const cabecalho = document.createElement('div');
+    cabecalho.className = 'heatmap-mes-cabecalho';
+    DIAS_SEMANA_ABREV.forEach(letra => {
+      const span = document.createElement('span');
+      span.textContent = letra;
+      cabecalho.appendChild(span);
+    });
+    grid.appendChild(cabecalho);
+
+    const corpo = document.createElement('div');
+    corpo.className = 'heatmap-mes-corpo';
+
+    const totalDias = diasNoMesHeatmap(anoHeatmap, mesHeatmapSelecionado);
+    const primeiroDiaSemana = new Date(anoHeatmap, mesHeatmapSelecionado - 1, 1).getDay(); // 0=Dom
+
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+      const vazio = document.createElement('div');
+      vazio.className = 'heatmap-mes-dia heatmap-mes-dia-vazia';
+      corpo.appendChild(vazio);
+    }
+
+    const hojeIso = new Date().toISOString().slice(0, 10);
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const iso = `${anoHeatmap}-${String(mesHeatmapSelecionado).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      const paginas = heatmapMapaPaginasAtual[iso] || 0;
+      const intensidade = paginas / heatmapMaxPagAtual;
+
+      const celula = document.createElement('div');
+      celula.className = 'heatmap-mes-dia';
+      if (iso === hojeIso) celula.classList.add('heatmap-mes-dia-hoje');
+      celula.style.background = getHeatColorDashboard(intensidade);
+      celula.title = `${formatarDataBrasileira(iso)}: ${paginas} página${paginas === 1 ? '' : 's'}`;
+
+      const numeroDia = document.createElement('span');
+      numeroDia.className = 'heatmap-mes-dia-numero';
+      numeroDia.textContent = dia;
+      celula.appendChild(numeroDia);
+
+      if (paginas > 0) {
+        const qtdPaginas = document.createElement('span');
+        qtdPaginas.className = 'heatmap-mes-dia-paginas';
+        qtdPaginas.textContent = paginas;
+        celula.appendChild(qtdPaginas);
+      }
+
+      corpo.appendChild(celula);
+    }
+
+    grid.appendChild(corpo);
+  }
+
+  function getHeatColorDashboard(intensidade) {
+    if (temaEscuro()) {
+      if (intensidade === 0) return '#2A2820';   // fundo escuro, sem leitura
+      if (intensidade < 0.25) return '#3D4739';
+      if (intensidade < 0.5) return '#526350';
+      if (intensidade < 0.75) return '#6E8266';
+      return '#9DAE96';                          // dia mais intenso, bem visível no escuro
+    }
+    if (intensidade === 0) return '#EDEAE2';   // papel, sem leitura
+    if (intensidade < 0.25) return '#C9D2C4';  // musgo bem claro
+    if (intensidade < 0.5) return '#9DAE96';   // musgo claro
+    if (intensidade < 0.75) return '#6E8266';  // musgo médio
+    return '#46543F';                          // musgo profundo (dia mais intenso)
   }
 
   function mostrarSkeletons() {

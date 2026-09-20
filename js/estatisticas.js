@@ -1,10 +1,6 @@
 const Estatisticas = (() => {
   const graficos = {};
   let anoSelecionado = new Date().getFullYear();
-  let mesHeatmapSelecionado = new Date().getMonth() + 1;
-  let heatmapMesEscolhidoManualmente = false;
-  let heatmapMapaPaginasAtual = {};
-  let heatmapMaxPagAtual = 1;
 
   // Cores dos gráficos conforme o tema ativo (claro/escuro) — o Chart.js não
   // acompanha as variáveis CSS sozinho, então lemos a classe 'dark-mode' do
@@ -169,7 +165,6 @@ const Estatisticas = (() => {
       try { criarGraficoPaginasDia(dados.paginasPorDia); } catch(e) { console.warn(e); }
       try { criarGraficoGeneros(dados.generos); } catch(e) { console.warn(e); }
       try { criarGraficoDiaSemana(dados.tempoPorDiaSemana); } catch(e) { console.warn(e); }
-      try { criarHeatmap(dados.heatmap); } catch(e) { console.warn(e); }
       if (dados.velocidadeMensal) {
         try { criarGraficoVelocidadeMensal(dados.velocidadeMensal); } catch(e) { console.warn(e); }
       }
@@ -228,8 +223,7 @@ const Estatisticas = (() => {
       'titulo-ano-finalizados-mes',
       'titulo-ano-generos',
       'titulo-ano-dia-semana',
-      'titulo-ano-velocidade',
-      'titulo-ano-heatmap'
+      'titulo-ano-velocidade'
     ];
     ids.forEach(id => setText(id, `(${ano})`));
   }
@@ -388,131 +382,6 @@ const Estatisticas = (() => {
     });
   }
 
-  // Heatmap: mini calendário de um mês por vez, com uma faixa de 12 pílulas
-  // (Jan a Dez) funcionando como seletor — troca o mês exibido sem precisar
-  // desenhar os 12 meses simultaneamente (era o formato antigo, em anéis
-  // concêntricos, que mostrava o ano inteiro de uma vez).
-  const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const DIAS_SEMANA_ABREV = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-
-  function diasNoMes(ano, mes) {
-    return new Date(ano, mes, 0).getDate(); // mes 1-12
-  }
-
-  function formatarDataBrasileira(iso) {
-    const partes = iso.split('-');
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  }
-
-  function criarHeatmap(heatmapData) {
-    const container = document.getElementById('heatmap-container');
-    if (!container) return;
-    container.innerHTML = '';
-
-    heatmapMapaPaginasAtual = {};
-    heatmapMaxPagAtual = 1;
-    if (heatmapData && heatmapData.length) {
-      heatmapData.forEach(d => { heatmapMapaPaginasAtual[d.data] = d.paginas; });
-      heatmapMaxPagAtual = Math.max(...heatmapData.map(d => d.paginas), 1);
-    }
-
-    // Ao trocar de ano (sem o usuário ter escolhido um mês manualmente),
-    // volta o seletor para o mês atual quando o ano exibido é o corrente,
-    // ou para Janeiro em anos anteriores.
-    if (!heatmapMesEscolhidoManualmente) {
-      mesHeatmapSelecionado = (anoSelecionado === new Date().getFullYear())
-        ? new Date().getMonth() + 1
-        : 1;
-    }
-
-    const seletor = document.createElement('div');
-    seletor.className = 'heatmap-seletor-mes';
-    MESES_ABREV.forEach((nomeMes, idx) => {
-      const mes = idx + 1;
-      const pill = document.createElement('button');
-      pill.type = 'button';
-      pill.className = 'heatmap-mes-pill' + (mes === mesHeatmapSelecionado ? ' ativo' : '');
-      pill.textContent = nomeMes;
-      pill.addEventListener('click', () => {
-        mesHeatmapSelecionado = mes;
-        heatmapMesEscolhidoManualmente = true;
-        renderizarMesHeatmap();
-      });
-      seletor.appendChild(pill);
-    });
-    container.appendChild(seletor);
-
-    const grid = document.createElement('div');
-    grid.id = 'heatmap-mes-grid';
-    container.appendChild(grid);
-
-    renderizarMesHeatmap();
-  }
-
-  function renderizarMesHeatmap() {
-    const grid = document.getElementById('heatmap-mes-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    document.querySelectorAll('.heatmap-mes-pill').forEach((pill, idx) => {
-      pill.classList.toggle('ativo', idx + 1 === mesHeatmapSelecionado);
-    });
-
-    const cabecalho = document.createElement('div');
-    cabecalho.className = 'heatmap-mes-cabecalho';
-    DIAS_SEMANA_ABREV.forEach(letra => {
-      const span = document.createElement('span');
-      span.textContent = letra;
-      cabecalho.appendChild(span);
-    });
-    grid.appendChild(cabecalho);
-
-    const corpo = document.createElement('div');
-    corpo.className = 'heatmap-mes-corpo';
-
-    const totalDias = diasNoMes(anoSelecionado, mesHeatmapSelecionado);
-    const primeiroDiaSemana = new Date(anoSelecionado, mesHeatmapSelecionado - 1, 1).getDay(); // 0=Dom
-
-    for (let i = 0; i < primeiroDiaSemana; i++) {
-      const vazio = document.createElement('div');
-      vazio.className = 'heatmap-mes-dia heatmap-mes-dia-vazia';
-      corpo.appendChild(vazio);
-    }
-
-    const hojeIso = new Date().toISOString().slice(0, 10);
-
-    for (let dia = 1; dia <= totalDias; dia++) {
-      const iso = `${anoSelecionado}-${String(mesHeatmapSelecionado).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-      const paginas = heatmapMapaPaginasAtual[iso] || 0;
-      const intensidade = paginas / heatmapMaxPagAtual;
-
-      const celula = document.createElement('div');
-      celula.className = 'heatmap-mes-dia';
-      if (iso === hojeIso) celula.classList.add('heatmap-mes-dia-hoje');
-      celula.style.background = getHeatColor(intensidade);
-      celula.textContent = dia;
-      celula.title = `${formatarDataBrasileira(iso)}: ${paginas} página${paginas === 1 ? '' : 's'}`;
-
-      corpo.appendChild(celula);
-    }
-
-    grid.appendChild(corpo);
-  }
-
-  function getHeatColor(intensidade) {
-    if (temaEscuro()) {
-      if (intensidade === 0) return '#2A2820';   // fundo escuro, sem leitura
-      if (intensidade < 0.25) return '#3D4739';
-      if (intensidade < 0.5) return '#526350';
-      if (intensidade < 0.75) return '#6E8266';
-      return '#9DAE96';                          // dia mais intenso, bem visível no escuro
-    }
-    if (intensidade === 0) return '#EDEAE2';   // papel, sem leitura
-    if (intensidade < 0.25) return '#C9D2C4';  // musgo bem claro
-    if (intensidade < 0.5) return '#9DAE96';   // musgo claro
-    if (intensidade < 0.75) return '#6E8266';  // musgo médio
-    return '#46543F';                          // musgo profundo (dia mais intenso)
-  }
   function preencherTopAutores(autores) {
     const ul = document.getElementById('top-autores');
     if (!ul) return;

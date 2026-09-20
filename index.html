@@ -246,11 +246,23 @@
           </div>
         </div>
 
-        <!-- Mini-heatmap: últimos ~70 dias de leitura -->
+        <!-- Mapa de calor de leitura: mês por vez, com pílulas Jan-Dez como
+             seletor (movido de Estatísticas pra cá) -->
         <div class="card mt-3 shadow-sm">
           <div class="card-body">
-            <h5>Consistência recente</h5>
-            <div id="mini-heatmap-container"></div>
+            <h5><i class="fas fa-fire me-2"></i>Mapa de calor de leitura</h5>
+            <div id="heatmap-container"></div>
+            <div class="d-flex justify-content-center mt-2">
+              <small class="me-2">Menos</small>
+              <div class="d-flex gap-1 align-items-center">
+                <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
+                <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
+              </div>
+              <small class="ms-2">Mais</small>
+            </div>
           </div>
         </div>
 
@@ -842,8 +854,8 @@
     </div>
   </div>
 
-  <!-- Linha 3 (Evolução da Velocidade + Mapa de Calor) -->
-  <div class="col-md-6">
+  <!-- Linha 3 (Evolução da Velocidade) -->
+  <div class="col-12">
     <div class="card shadow-sm h-100">
       <div class="card-header fw-bold"><i class="fas fa-gauge-high me-2"></i>Evolução da Velocidade (páginas/hora) <span id="titulo-ano-velocidade"></span></div>
       <div class="card-body">
@@ -851,25 +863,6 @@
       </div>
     </div>
   </div>
-<div class="col-md-6">
-  <div class="card shadow-sm h-100">
-    <div class="card-header fw-bold"><i class="fas fa-fire me-2"></i>Mapa de calor de leitura <span id="titulo-ano-heatmap"></span></div>
-    <div class="card-body">
-      <div id="heatmap-container"></div>
-      <div class="d-flex justify-content-center mt-2">
-        <small class="me-2">Menos</small>
-        <div class="d-flex gap-1 align-items-center">
-          <span style="width:12px;height:12px;background:#EDEAE2;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#C9D2C4;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#9DAE96;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#6E8266;border-radius:2px;"></span>
-          <span style="width:12px;height:12px;background:#46543F;border-radius:2px;"></span>
-        </div>
-        <small class="ms-2">Mais</small>
-      </div>
-    </div>
-  </div>
-</div>
 
     <!-- Top Autores e Editoras (2 colunas, lado a lado) -->
     <div class="row g-3 mt-3">

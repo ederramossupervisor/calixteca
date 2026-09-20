@@ -648,6 +648,32 @@ const API = (() => {
     return resultado;
   }
 
+  // Heatmap mensal (Dashboard): igual ao "heatmap" retornado por
+  // obterEstatisticas, mas isolado numa função leve — evita recalcular
+  // todas as outras estatísticas (gêneros, autores, velocidade etc.) só
+  // pra desenhar o mapa de calor no Dashboard.
+  async function obterHeatmapAno(ano) {
+    ano = Number(ano) || new Date().getFullYear();
+    const inicioAno = new Date(ano, 0, 1);
+    const fimAno = new Date(ano, 11, 31, 23, 59, 59);
+    const data = await todos('sessoes', 'data,paginas_lidas');
+    const paginasPorDia = {};
+    data.forEach((r) => {
+      const d = r.data ? parseDataLocal(r.data) : null;
+      if (d && !isNaN(d.getTime()) && d >= inicioAno && d <= fimAno) {
+        const key = d.toDateString();
+        paginasPorDia[key] = (paginasPorDia[key] || 0) + (Number(r.paginas_lidas) || 0);
+      }
+    });
+    const heatmap = [];
+    const diasNoAno = (ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0)) ? 366 : 365;
+    for (let h = diasNoAno - 1; h >= 0; h--) {
+      const diaHeat = new Date(fimAno); diaHeat.setHours(0, 0, 0, 0); diaHeat.setDate(diaHeat.getDate() - h);
+      heatmap.push({ data: formatDataLocal(diaHeat), paginas: paginasPorDia[diaHeat.toDateString()] || 0 });
+    }
+    return { ano, heatmap };
+  }
+
   // ========== INSIGHTS AVANÇADOS ==========
   async function obterInsightsAvancados() {
     const livrosRaw = await todos('livros', 'id,genero,nota,status,data_inicio,data_termino');
@@ -1289,6 +1315,7 @@ const API = (() => {
       case 'salvarCoordenadaLocal': return salvarCoordenadaLocal(dados.local, dados.coordenada);
       case 'deleteSession': return excluirSessao(dados.id);
       case 'heatmapRecente': return obterHeatmapRecente(dados.dias);
+      case 'heatmapAno': return obterHeatmapAno(dados.ano);
       case 'insightsAvancados': return obterInsightsAvancados();
       case 'timelineAtividades': return obterTimelineAtividades(dados.antesDe, dados.limite);
       case 'buscarPalavra': return buscarPalavra(dados.palavra);

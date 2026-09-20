@@ -132,69 +132,102 @@
   transform: scale(0.96);
 }
 
-/* Mini-heatmap do Dashboard — uma única fileira de quadradinhos (um por
-   dia), ocupando toda a largura do card. O número de colunas é definido
-   via JS (dashboard.js) de acordo com a quantidade de dias. */
-#mini-heatmap-container {
+/* ===== MAPA DE CALOR DE LEITURA (movido de Estatísticas): mini
+   calendário de um mês por vez, com pílulas Jan-Dez como seletor de mês.
+   Cada bloquinho mostra a quantidade de páginas lidas naquele dia (centro)
+   e o dia do mês bem pequeno no canto superior esquerdo. ===== */
+#heatmap-container {
   width: 100%;
-  padding: 4px 0;
-}
-#mini-heatmap-container .heatmap-grid {
-  display: grid;
-  gap: 2px;
-  width: 100%;
-}
-#mini-heatmap-container .heatmap-cell {
-  aspect-ratio: 1 / 1;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-#mini-heatmap-container .heatmap-cell-vazia {
-  cursor: default;
-  background: transparent !important;
-}
-#mini-heatmap-container .heatmap-cell:hover {
-  transform: scale(1.3);
-  z-index: 2;
+  padding: 4px;
 }
 
-/* Modo compacto (mobile): 7 colunas com células grandes, rótulo do dia
-   da semana em cima e o número de páginas dentro do quadradinho — troca
-   a fileira fininha de 70 dias por algo legível em tela pequena. */
-#mini-heatmap-container .heatmap-grid-compacta {
-  gap: 8px 6px;
-}
-#mini-heatmap-container .heatmap-celula-wrapper {
+/* Faixa de pílulas Jan..Dez, que funciona como seletor de mês */
+.heatmap-seletor-mes {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.heatmap-mes-pill {
+  border: 1px solid var(--border-color, rgba(0,0,0,0.12));
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.heatmap-mes-pill:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.heatmap-mes-pill.ativo {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Grade do mês selecionado */
+#heatmap-mes-grid {
+  max-width: 360px;
+  margin: 0 auto;
+}
+.heatmap-mes-cabecalho {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.heatmap-mes-corpo {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
-#mini-heatmap-container .heatmap-dia-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  line-height: 1;
-}
-#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell {
-  width: 100%;
+.heatmap-mes-dia {
+  position: relative;
   aspect-ratio: 1 / 1;
-  min-height: 36px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
+  cursor: pointer;
   transition: transform 0.1s;
 }
-#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell-hoje {
+.heatmap-mes-dia:hover {
+  transform: scale(1.12);
+  z-index: 2;
+}
+.heatmap-mes-dia-vazia {
+  cursor: default;
+  background: transparent !important;
+}
+.heatmap-mes-dia-hoje {
   box-shadow: 0 0 0 2px var(--accent);
 }
-#mini-heatmap-container .heatmap-grid-compacta .heatmap-cell:active {
-  transform: scale(1.15);
+/* Dia do mês: bem pequenininho, no canto superior esquerdo do bloquinho */
+.heatmap-mes-dia-numero {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 0.52rem;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.65;
+}
+/* Quantidade de páginas lidas naquele dia, centralizada no bloquinho */
+.heatmap-mes-dia-paginas {
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Timeline de atividades (js/timeline.js): feed vertical com marcadores por
