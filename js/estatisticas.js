@@ -184,6 +184,7 @@ const Estatisticas = (() => {
     }, 100);
     preencherTopAutores(dados.topAutores);
     preencherTopEditoras(dados.topEditoras);
+    preencherTopDiasLeitura(dados.topDiasLeitura);
 
     console.log('✅ Módulo Estatísticas pronto (ano ' + anoSelecionado + ').');
   }
@@ -223,7 +224,8 @@ const Estatisticas = (() => {
       'titulo-ano-finalizados-mes',
       'titulo-ano-generos',
       'titulo-ano-dia-semana',
-      'titulo-ano-velocidade'
+      'titulo-ano-velocidade',
+      'titulo-ano-top-dias'
     ];
     ids.forEach(id => setText(id, `(${ano})`));
   }
@@ -407,6 +409,24 @@ const Estatisticas = (() => {
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
         li.innerHTML = `${Util.escapeHTML(e.nome)} <span class="badge bg-secondary rounded-pill">${e.livros}</span>`;
+        ul.appendChild(li);
+      });
+    } else {
+      ul.innerHTML = '<li class="list-group-item text-muted">Nenhum dado</li>';
+    }
+  }
+
+  function preencherTopDiasLeitura(dias) {
+    const ul = document.getElementById('top-dias-leitura');
+    if (!ul) return;
+    ul.innerHTML = '';
+    if (dias && dias.length) {
+      const medalhas = ['🥇', '🥈', '🥉'];
+      dias.forEach((dia, idx) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        const prefixo = medalhas[idx] ? medalhas[idx] + ' ' : (idx + 1) + 'º ';
+        li.innerHTML = `${prefixo}${Util.escapeHTML(dia.data)} <span class="text-muted small ms-2 me-auto">${Util.escapeHTML(dia.diaSemana)}</span> <span class="badge bg-primary rounded-pill">${dia.paginas} pág.</span>`;
         ul.appendChild(li);
       });
     } else {

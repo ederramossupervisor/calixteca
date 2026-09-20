@@ -566,6 +566,20 @@ const API = (() => {
 
     const paginasPorDataStrAno = {};
     sessoes.forEach((s) => { const key = s.data.toDateString(); paginasPorDataStrAno[key] = (paginasPorDataStrAno[key] || 0) + s.paginas; });
+
+    const topDiasLeitura = Object.entries(paginasPorDataStrAno)
+      .filter(([, paginas]) => paginas > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([dataStr, paginas]) => {
+        const d = new Date(dataStr);
+        return {
+          data: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          diaSemana: diasDaSemana[d.getDay()],
+          paginas
+        };
+      });
+
     const heatmap = [];
     const diasNoAno = (ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0)) ? 366 : 365;
     for (let h = diasNoAno - 1; h >= 0; h--) {
@@ -590,7 +604,7 @@ const API = (() => {
       generos: Object.entries(generosCont).map((i) => ({ genero: i[0], count: i[1] })),
       tempoPorDiaSemana: { labels: diasDaSemana, valores: tempoPorDiaSemana }, velocidadeMedia,
       velocidadeMensal: { labels: labelsMesesVelocidade, valores: velocidadeMensalValores },
-      topAutores, topEditoras, heatmap, insights, totalLivros: livrosAno.length,
+      topAutores, topEditoras, topDiasLeitura, heatmap, insights, totalLivros: livrosAno.length,
       totalPaginas: paginasAno2, paginasAno: paginasAno2, totalHoras: (totalMinutosAno / 60).toFixed(1)
     };
   }
@@ -1034,7 +1048,7 @@ const API = (() => {
     });
 
     const livrosMap = {};
-    const livrosData = await todos('livros', 'id,titulo,autor,url_capa,imagem_capa,data_cadastro,status,data_termino');
+    const livrosData = await todos('livros', 'id,titulo,autor,url_capa,imagem_capa,data_cadastro,data_inicio,status,data_termino');
     livrosData.forEach((l) => {
       const titulo = l.titulo || 'Sem título';
       const autor = l.autor || '';
@@ -1044,6 +1058,10 @@ const API = (() => {
       if (l.data_cadastro) {
         const dCad = new Date(l.data_cadastro);
         if (!isNaN(dCad.getTime())) eventos.push({ tipo: 'livro', data: dCad.toISOString(), titulo, detalhe: 'Adicionado à biblioteca' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book', livroID: l.id, urlCapa });
+      }
+      if (l.data_inicio) {
+        const dInicio = parseDataLocal(l.data_inicio);
+        if (!isNaN(dInicio.getTime())) eventos.push({ tipo: 'livro-comecou', data: dInicio.toISOString(), titulo, detalhe: 'Começou a ler' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book-open', livroID: l.id, urlCapa });
       }
       if (l.status === 'Finalizado') {
         let dFinal = l.data_termino ? parseDataLocal(l.data_termino) : null;
