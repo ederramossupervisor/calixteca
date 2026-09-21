@@ -165,7 +165,8 @@ const Configuracoes = (() => {
     btnRestore.addEventListener('click', async () => {
       const file = inputRestore.files[0];
       if (!file) return;
-      if (!confirm('Tem certeza que deseja restaurar este backup? Todos os dados atuais serão substituídos.')) return;
+      const confirmouRestaurar = await Util.confirmar('Tem certeza que deseja restaurar este backup? Todos os dados atuais serão substituídos.', { titulo: 'Restaurar backup', variante: 'warning', confirmarTexto: 'Restaurar', icone: 'fa-clock-rotate-left' });
+      if (!confirmouRestaurar) return;
 
       const reader = new FileReader();
       reader.onload = async (e) => {

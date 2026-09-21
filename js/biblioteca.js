@@ -260,7 +260,8 @@ const Biblioteca = (() => {
     });
 
     document.querySelector('.btn-excluir-livro').addEventListener('click', async () => {
-      if (confirm('Tem certeza que deseja excluir este livro e todos os seus registros?')) {
+      const confirmouExcluirLivro = await Util.confirmar('Tem certeza que deseja excluir este livro e todos os seus registros?', { titulo: 'Excluir livro', variante: 'danger', confirmarTexto: 'Excluir tudo' });
+      if (confirmouExcluirLivro) {
         if (!navigator.onLine) {
           Util.toast('Você está offline. Conecte-se para excluir.', 'warning');
           return;

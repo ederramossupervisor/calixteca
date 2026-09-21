@@ -46,6 +46,92 @@ const Util = {
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
   },
 
+  // Diálogo de confirmação personalizado (substitui o confirm() nativo do navegador)
+  // Retorna uma Promise<boolean>: true se confirmado, false se cancelado/fechado.
+  confirmar: (mensagem, opcoes = {}) => {
+    const {
+      titulo = 'Confirmar ação',
+      confirmarTexto = 'Confirmar',
+      cancelarTexto = 'Cancelar',
+      variante = 'primary', // 'primary' | 'danger' | 'warning'
+      icone = null // classe Font Awesome opcional (ex.: 'fa-trash'); se omitido, usa a padrão da variante
+    } = opcoes;
+
+    return new Promise((resolve) => {
+      let modalEl = document.getElementById('util-confirm-modal');
+      if (!modalEl) {
+        const html = `
+          <div class="modal fade" id="util-confirm-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+              <div class="modal-content">
+                <div class="modal-body text-center pt-4 pb-2">
+                  <div id="util-confirm-icone" class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;border-radius:50%;">
+                    <i class="fas"></i>
+                  </div>
+                  <h5 id="util-confirm-titulo" class="mb-2"></h5>
+                  <p id="util-confirm-mensagem" class="text-secondary mb-0"></p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
+                  <button type="button" class="btn btn-outline-secondary px-3" id="util-confirm-cancelar" data-bs-dismiss="modal"></button>
+                  <button type="button" class="btn px-3" id="util-confirm-ok"></button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        modalEl = document.getElementById('util-confirm-modal');
+      }
+
+      const iconeWrap = modalEl.querySelector('#util-confirm-icone');
+      const iconeEl = iconeWrap.querySelector('i');
+      const tituloEl = modalEl.querySelector('#util-confirm-titulo');
+      const mensagemEl = modalEl.querySelector('#util-confirm-mensagem');
+      const btnCancelar = modalEl.querySelector('#util-confirm-cancelar');
+      const btnOk = modalEl.querySelector('#util-confirm-ok');
+
+      const estilos = {
+        primary: { bg: 'bg-primary-subtle', texto: 'text-primary-emphasis', btn: 'btn-primary', icone: 'fa-circle-question' },
+        danger: { bg: 'bg-danger-subtle', texto: 'text-danger-emphasis', btn: 'btn-danger', icone: 'fa-trash' },
+        warning: { bg: 'bg-warning-subtle', texto: 'text-warning-emphasis', btn: 'btn-warning', icone: 'fa-triangle-exclamation' }
+      };
+      const estilo = estilos[variante] || estilos.primary;
+
+      iconeWrap.className = `mx-auto mb-3 d-flex align-items-center justify-content-center ${estilo.bg} ${estilo.texto}`;
+      iconeEl.className = `fas ${icone || estilo.icone}`;
+      iconeEl.style.fontSize = '1.4rem';
+
+      tituloEl.textContent = titulo;
+      mensagemEl.textContent = mensagem;
+      btnCancelar.textContent = cancelarTexto;
+      btnOk.textContent = confirmarTexto;
+      btnOk.className = `btn px-3 ${estilo.btn}`;
+
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      let resolvido = false;
+      const finalizar = (valor) => {
+        if (resolvido) return;
+        resolvido = true;
+        resolve(valor);
+      };
+
+      const onOk = () => {
+        finalizar(true);
+        modal.hide();
+      };
+      const onHidden = () => {
+        finalizar(false);
+        btnOk.removeEventListener('click', onOk);
+        modalEl.removeEventListener('hidden.bs.modal', onHidden);
+      };
+
+      btnOk.addEventListener('click', onOk);
+      modalEl.addEventListener('hidden.bs.modal', onHidden);
+
+      modal.show();
+    });
+  },
+
   formatDate: (iso) => {
     if (!iso) return '';
     return new Date(iso).toLocaleDateString('pt-BR');

@@ -877,7 +877,10 @@ const Leitura = (() => {
           const chave = `local_coord_${nomeLocal.replace(/\s+/g, '_')}`;
           const existente = configs && configs[chave];
           if (existente && existente !== coordenada) {
-            const confirmar = confirm(`"${nomeLocal}" já tem uma coordenada salva (${existente}). Substituir pela localização atual (${coordenada})?`);
+            const confirmar = await Util.confirmar(
+              `"${nomeLocal}" já tem uma coordenada salva (${existente}). Substituir pela localização atual (${coordenada})?`,
+              { titulo: 'Coordenada já existe', variante: 'warning', confirmarTexto: 'Substituir', cancelarTexto: 'Manter atual', icone: 'fa-location-dot' }
+            );
             if (!confirmar) {
               if (status) status.textContent = '';
               return;
@@ -966,7 +969,11 @@ const Leitura = (() => {
     const livroSelecionado = livrosCache.find(l => l.ID === livroID);
     const tituloConfirmacao = livroSelecionado ? livroSelecionado.Título : textoSelecionado;
     const acaoConfirmacao = editandoSessaoID ? 'atualizar a sessão' : 'registrar a sessão';
-    if (!confirm(`Confirma ${acaoConfirmacao} para o livro "${tituloConfirmacao}"?`)) {
+    const confirmouSessao = await Util.confirmar(
+      `Confirma ${acaoConfirmacao} para o livro "${tituloConfirmacao}"?`,
+      { titulo: editandoSessaoID ? 'Atualizar sessão' : 'Registrar sessão', confirmarTexto: editandoSessaoID ? 'Atualizar' : 'Registrar', icone: 'fa-book-open' }
+    );
+    if (!confirmouSessao) {
       return;
     }
 
@@ -1165,7 +1172,8 @@ const Leitura = (() => {
       Util.toast('Você está offline. Conecte-se para excluir sessões.', 'warning');
       return;
     }
-    if (confirm('Excluir esta sessão?')) {
+    const confirmouExcluir = await Util.confirmar('Esta ação não pode ser desfeita.', { titulo: 'Excluir sessão', variante: 'danger', confirmarTexto: 'Excluir' });
+    if (confirmouExcluir) {
       try {
         await API.enviar({ acao: 'deleteSession', id });
         carregarHistorico();

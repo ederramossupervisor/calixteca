@@ -136,7 +136,8 @@ const DesejosEmprestimos = (() => {
 
         container.querySelectorAll('.btn-remover-desejo').forEach(btn => {
           btn.addEventListener('click', async () => {
-            if (confirm('Remover este desejo?')) {
+            const confirmouRemover = await Util.confirmar('Tem certeza que deseja remover este item da lista de desejos?', { titulo: 'Remover desejo', variante: 'danger', confirmarTexto: 'Remover' });
+            if (confirmouRemover) {
               await API.enviar({ acao: 'removeWish', id: btn.dataset.id });
               listarDesejos();
               Util.toast('Desejo removido', 'info');
