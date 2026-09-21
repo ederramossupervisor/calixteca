@@ -12,6 +12,7 @@ const Timeline = (() => {
   let temMais = true;
   let cursorAntesDe = null; // data (ISO) do último item carregado
   let primeiraCarga = true;
+  let geracaoAtual = 0; // incrementa a cada init() — descarta respostas de uma inicialização anterior ainda em voo
 
   function container() {
     return document.getElementById('timeline-container');
@@ -28,7 +29,10 @@ const Timeline = (() => {
     if (!cont) return;
 
     // Reinicia o estado a cada abertura do Dashboard (evita duplicar itens
-    // se o usuário sair e voltar pra tela).
+    // se o usuário sair e voltar pra tela, ou se init() for chamado mais
+    // de uma vez em sequência — ex.: navegação inicial + atalho da PWA).
+    geracaoAtual += 1;
+    const minhaGeracao = geracaoAtual;
     carregando = false;
     temMais = true;
     cursorAntesDe = null;
@@ -36,7 +40,7 @@ const Timeline = (() => {
     cont.innerHTML = '';
 
     configurarObserver();
-    await carregarProximaPagina();
+    await carregarProximaPagina(minhaGeracao);
   }
 
   function configurarObserver() {
@@ -47,7 +51,7 @@ const Timeline = (() => {
     observer = new IntersectionObserver((entradas) => {
       entradas.forEach(entrada => {
         if (entrada.isIntersecting && !carregando && temMais) {
-          carregarProximaPagina();
+          carregarProximaPagina(geracaoAtual);
         }
       });
     }, { rootMargin: '200px' });
@@ -55,8 +59,9 @@ const Timeline = (() => {
     observer.observe(alvo);
   }
 
-  async function carregarProximaPagina() {
+  async function carregarProximaPagina(geracao) {
     if (carregando || !temMais) return;
+    if (geracao !== geracaoAtual) return; // uma inicialização mais nova já assumiu
     carregando = true;
 
     const alvoSentinela = sentinela();
@@ -68,6 +73,8 @@ const Timeline = (() => {
         antesDe: cursorAntesDe,
         limite: LIMITE_POR_PAGINA
       });
+
+      if (geracao !== geracaoAtual) return; // resposta de uma geração antiga — descarta
 
       if (!resp || !Array.isArray(resp.itens)) {
         throw new Error('Resposta inválida');
@@ -86,21 +93,24 @@ const Timeline = (() => {
       }
       primeiraCarga = false;
     } catch (e) {
+      if (geracao !== geracaoAtual) return; // erro de uma geração antiga — ignora
       console.warn('Falha ao carregar timeline de atividades:', e);
       // Não trava o resto do Dashboard — só para de tentar carregar mais
       // páginas até a próxima abertura da tela.
       temMais = false;
     } finally {
-      carregando = false;
-      // A sentinela só pode ficar escondida (d-none) quando realmente não
-      // há mais itens: como IntersectionObserver não detecta elementos com
-      // display:none, escondê-la incondicionalmente aqui travava o scroll
-      // infinito depois da primeira página (ela nunca mais "reaparecia"
-      // pro observer notar a rolagem seguinte).
-      if (!temMais) {
-        if (alvoSentinela) alvoSentinela.classList.add('d-none');
-        const fim = elFim();
-        if (fim && cursorAntesDe) fim.classList.remove('d-none');
+      if (geracao === geracaoAtual) {
+        carregando = false;
+        // A sentinela só pode ficar escondida (d-none) quando realmente não
+        // há mais itens: como IntersectionObserver não detecta elementos com
+        // display:none, escondê-la incondicionalmente aqui travava o scroll
+        // infinito depois da primeira página (ela nunca mais "reaparecia"
+        // pro observer notar a rolagem seguinte).
+        if (!temMais) {
+          if (alvoSentinela) alvoSentinela.classList.add('d-none');
+          const fim = elFim();
+          if (fim && cursorAntesDe) fim.classList.remove('d-none');
+        }
       }
     }
   }
