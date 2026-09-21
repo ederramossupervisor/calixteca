@@ -1035,6 +1035,7 @@ const API = (() => {
     const eventos = [];
     const sessData = await todos('sessoes', 'data,hora_inicio,hora_fim,livro_id');
     const ultimaSessaoPorLivro = {};
+    const primeiraSessaoPorLivro = {};
     sessData.forEach((s) => {
       if (!s.data) return;
       const dSess = parseDataLocal(s.data);
@@ -1045,6 +1046,8 @@ const API = (() => {
       if (!livroIDSess) return;
       const atual = ultimaSessaoPorLivro[livroIDSess];
       if (!atual || dSess.getTime() > atual.timestamp) ultimaSessaoPorLivro[livroIDSess] = { timestamp: dSess.getTime(), minutosFim: _paraMinutosDoDia(s.hora_fim) };
+      const primeira = primeiraSessaoPorLivro[livroIDSess];
+      if (!primeira || dSess.getTime() < primeira.timestamp) primeiraSessaoPorLivro[livroIDSess] = { timestamp: dSess.getTime() };
     });
 
     const livrosMap = {};
@@ -1059,10 +1062,9 @@ const API = (() => {
         const dCad = new Date(l.data_cadastro);
         if (!isNaN(dCad.getTime())) eventos.push({ tipo: 'livro', data: dCad.toISOString(), titulo, detalhe: 'Adicionado à biblioteca' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book', livroID: l.id, urlCapa });
       }
-      if (l.data_inicio) {
-        const dInicio = parseDataLocal(l.data_inicio);
-        if (!isNaN(dInicio.getTime())) eventos.push({ tipo: 'livro-comecou', data: dInicio.toISOString(), titulo, detalhe: 'Começou a ler' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book-open', livroID: l.id, urlCapa });
-      }
+      const primeiraSessao = primeiraSessaoPorLivro[l.id];
+      let dInicio = primeiraSessao ? new Date(primeiraSessao.timestamp) : (l.data_inicio ? parseDataLocal(l.data_inicio) : null);
+      if (dInicio && !isNaN(dInicio.getTime())) eventos.push({ tipo: 'livro-comecou', data: dInicio.toISOString(), titulo, detalhe: 'Começou a ler' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book-open', livroID: l.id, urlCapa });
       if (l.status === 'Finalizado') {
         let dFinal = l.data_termino ? parseDataLocal(l.data_termino) : null;
         const ultimaSessao = ultimaSessaoPorLivro[l.id];
