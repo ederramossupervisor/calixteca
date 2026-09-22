@@ -157,6 +157,9 @@ function activatePageGlobal(pageName) {
     case 'metas':
       if (typeof Metas !== 'undefined' && Metas.init) Metas.init();
       break;
+    case 'bingo':
+      if (typeof Bingo !== 'undefined' && Bingo.init) Bingo.init();
+      break;
     case 'anotacoes':
       if (typeof Anotacoes !== 'undefined' && Anotacoes.init) Anotacoes.init();
       break;
@@ -188,6 +191,7 @@ function activatePageGlobal(pageName) {
     leitura: 'fa-clock',
     estatisticas: 'fa-chart-bar',
     metas: 'fa-bullseye',
+    bingo: 'fa-dice',
     anotacoes: 'fa-sticky-note',
     desejos: 'fa-heart',
     exportar: 'fa-download',

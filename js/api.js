@@ -9,7 +9,8 @@ const API = (() => {
 
   const ACOES_CACHEAVEIS = new Set([
     'getConfigs', 'listAllBooks', 'listBooks', 'listarLocais', 'listNotes',
-    'listQuotes', 'listWishes', 'listLoans', 'dashboard', 'timelineAtividades', 'buscarPalavra'
+    'listQuotes', 'listWishes', 'listLoans', 'dashboard', 'timelineAtividades', 'buscarPalavra',
+    'bingoEstado'
   ]);
   const CACHE_TTL_MS = 45000;
   const cache = new Map();
@@ -1294,6 +1295,87 @@ const API = (() => {
   async function proxyImagem(url) { return _chamarEdgeFunction({ acao: 'proxyImage', url }); }
   async function buscarPalavra(palavra) { return _chamarEdgeFunction({ acao: 'buscarPalavra', palavra }); }
 
+  // ========== BINGO LITERÁRIO ==========
+  // Os textos dos 200 desafios ficam em js/bingo-dados.js (só no cliente);
+  // aqui só guardamos tema/índice/ciclo + um snapshot do texto sorteado.
+  function _mapBingoRow(r) {
+    return {
+      id: r.id, tema: r.tema, indice: r.indice, ciclo: r.ciclo, texto: r.texto,
+      status: r.status, livro_id: r.livro_id, livro_titulo: (r.livros && r.livros.titulo) || null,
+      sorteado_em: r.sorteado_em, concluido_em: r.concluido_em
+    };
+  }
+  async function bingoObterEstado() {
+    const [estadoResp, desafiosResp] = await Promise.all([
+      sb.from('bingo_estado').select('*').eq('id', 1).maybeSingle(),
+      sb.from('bingo_desafios').select('id,tema,indice,ciclo,status,livro_id,sorteado_em,concluido_em,texto,livros(titulo)')
+    ]);
+    if (estadoResp.error) throw new Error(estadoResp.error.message);
+    if (desafiosResp.error) throw new Error(desafiosResp.error.message);
+    return {
+      ultimosTemas: (estadoResp.data && estadoResp.data.ultimos_temas) || [],
+      desafios: (desafiosResp.data || []).map(_mapBingoRow)
+    };
+  }
+  async function bingoSortear(tema, textos) {
+    if (!tema || !Array.isArray(textos) || !textos.length) return { erro: 'Dados do tema inválidos.' };
+    const { data: estadoRow, error: eEstado } = await sb.from('bingo_estado').select('*').eq('id', 1).maybeSingle();
+    if (eEstado) throw new Error(eEstado.message);
+    const ultimosTemas = (estadoRow && estadoRow.ultimos_temas) || [];
+    if (ultimosTemas.includes(tema)) {
+      return { erro: 'Este tema ainda está bloqueado. Sorteie os outros temas primeiro.' };
+    }
+
+    const { data: doTema, error: eDoTema } = await sb.from('bingo_desafios')
+      .select('indice, ciclo').eq('tema', tema).order('ciclo', { ascending: false });
+    if (eDoTema) throw new Error(eDoTema.message);
+
+    let ciclo = 1;
+    let indicesSorteados = [];
+    if (doTema && doTema.length) {
+      ciclo = doTema[0].ciclo;
+      indicesSorteados = doTema.filter(d => d.ciclo === ciclo).map(d => d.indice);
+    }
+
+    let cicloNovo = false;
+    if (indicesSorteados.length >= textos.length) {
+      ciclo += 1;
+      indicesSorteados = [];
+      cicloNovo = true;
+    }
+
+    const disponiveis = [];
+    for (let i = 0; i < textos.length; i++) if (!indicesSorteados.includes(i)) disponiveis.push(i);
+    const indiceEscolhido = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+    const texto = textos[indiceEscolhido];
+
+    const { data: inserido, error: eInsert } = await sb.from('bingo_desafios')
+      .insert({ tema, indice: indiceEscolhido, ciclo, texto, status: 'sorteado' })
+      .select('id,tema,indice,ciclo,status,livro_id,sorteado_em,concluido_em,texto')
+      .single();
+    if (eInsert) throw new Error(eInsert.message);
+
+    const ultimosTemasAtualizados = [tema, ...ultimosTemas].slice(0, 3);
+    const { error: eUpsert } = await sb.from('bingo_estado').upsert({ id: 1, ultimos_temas: ultimosTemasAtualizados });
+    if (eUpsert) throw new Error(eUpsert.message);
+
+    return { status: 'ok', desafio: _mapBingoRow(inserido), cicloNovo, ultimosTemas: ultimosTemasAtualizados };
+  }
+  async function bingoConcluir(id, livroId) {
+    const patch = { status: 'concluido', concluido_em: new Date().toISOString(), livro_id: livroId || null };
+    const { data, error } = await sb.from('bingo_desafios').update(patch).eq('id', id)
+      .select('id,tema,indice,ciclo,status,livro_id,sorteado_em,concluido_em,texto,livros(titulo)').single();
+    if (error) throw new Error(error.message);
+    return { status: 'ok', desafio: _mapBingoRow(data) };
+  }
+  async function bingoDesfazerConclusao(id) {
+    const { data, error } = await sb.from('bingo_desafios')
+      .update({ status: 'sorteado', concluido_em: null, livro_id: null }).eq('id', id)
+      .select('id,tema,indice,ciclo,status,livro_id,sorteado_em,concluido_em,texto').single();
+    if (error) throw new Error(error.message);
+    return { status: 'ok', desafio: _mapBingoRow(data) };
+  }
+
   // ========== DISPATCHER ==========
   async function processar(dados) {
     switch (dados.acao) {
@@ -1339,6 +1421,10 @@ const API = (() => {
       case 'insightsAvancados': return obterInsightsAvancados();
       case 'timelineAtividades': return obterTimelineAtividades(dados.antesDe, dados.limite);
       case 'buscarPalavra': return buscarPalavra(dados.palavra);
+      case 'bingoEstado': return bingoObterEstado();
+      case 'bingoSortear': return bingoSortear(dados.tema, dados.textos);
+      case 'bingoConcluir': return bingoConcluir(dados.id, dados.livroId);
+      case 'bingoDesfazerConclusao': return bingoDesfazerConclusao(dados.id);
       default: return { erro: 'Ação desconhecida' };
     }
   }
