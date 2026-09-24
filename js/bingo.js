@@ -154,19 +154,27 @@ const Bingo = (() => {
       const linha = linhasDoCiclo[indice];
       let icone = 'fa-regular fa-square text-muted';
       let extra = '';
+      const clicavel = !!linha;
       if (linha && linha.status === 'concluido') {
         icone = 'fas fa-square-check text-success';
         if (linha.livro_titulo) extra = ` <small class="text-muted">— ${Util.escapeHTML(linha.livro_titulo)}</small>`;
       } else if (linha) {
         icone = 'fas fa-dice text-warning';
       }
-      return `<li class="list-group-item d-flex align-items-start gap-2 py-1 px-2 border-0 bg-transparent">
+      return `<li class="list-group-item d-flex align-items-start gap-2 py-1 px-2 border-0 bg-transparent ${clicavel ? 'bingo-item-clicavel' : ''}" ${clicavel ? `data-bingo-indice="${indice}" role="button"` : ''}>
         <i class="${icone} mt-1"></i>
         <span class="${linha && linha.status === 'concluido' ? 'text-decoration-line-through text-muted' : ''}">${Util.escapeHTML(texto)}${extra}</span>
       </li>`;
     }).join('');
 
     el.innerHTML = `<div class="border-top px-3 py-2"><ul class="list-group list-group-flush" style="max-height:280px; overflow-y:auto;">${itens}</ul></div>`;
+    el.querySelectorAll('[data-bingo-indice]').forEach(li => {
+      li.addEventListener('click', () => {
+        const indice = Number(li.dataset.bingoIndice);
+        const linha = linhasDoCiclo[indice];
+        if (linha) abrirModalResultado(tema, linha, false);
+      });
+    });
   }
 
   async function sortear(temaId) {
@@ -206,6 +214,7 @@ const Bingo = (() => {
             <div class="modal-body text-center">
               <div id="bingo-resultado-ciclo-aviso" class="alert alert-info small d-none"></div>
               <p class="fs-5 mb-0" id="bingo-resultado-texto"></p>
+              <p class="text-success small mt-2 mb-0 d-none" id="bingo-resultado-concluido-info"></p>
               <div id="bingo-resultado-concluir-form" class="mt-4 text-start d-none">
                 <label class="form-label small">Livro que cumpriu este desafio (opcional)</label>
                 <input type="text" id="bingo-input-livro" class="form-control" list="bingo-livros-datalist" placeholder="Digite o nome do livro..." autocomplete="off">
@@ -216,6 +225,7 @@ const Bingo = (() => {
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
               <button type="button" class="btn btn-outline-success d-none" id="bingo-btn-abrir-concluir"><i class="fas fa-check me-1"></i> Marcar como concluído</button>
               <button type="button" class="btn btn-success d-none" id="bingo-btn-confirmar-concluir"><i class="fas fa-check me-1"></i> Confirmar conclusão</button>
+              <button type="button" class="btn btn-outline-danger d-none" id="bingo-btn-desfazer-concluir"><i class="fas fa-rotate-left me-1"></i> Desfazer conclusão</button>
             </div>
           </div>
         </div>
@@ -251,15 +261,22 @@ const Bingo = (() => {
     formConcluir.classList.add('d-none');
     const btnAbrirConcluir = document.getElementById('bingo-btn-abrir-concluir');
     const btnConfirmarConcluir = document.getElementById('bingo-btn-confirmar-concluir');
+    const btnDesfazer = document.getElementById('bingo-btn-desfazer-concluir');
+    const infoConcluido = document.getElementById('bingo-resultado-concluido-info');
     const inputLivro = document.getElementById('bingo-input-livro');
     inputLivro.value = '';
 
     if (desafio.status === 'concluido') {
       btnAbrirConcluir.classList.add('d-none');
       btnConfirmarConcluir.classList.add('d-none');
+      btnDesfazer.classList.remove('d-none');
+      infoConcluido.classList.remove('d-none');
+      infoConcluido.innerHTML = `<i class="fas fa-circle-check me-1"></i>Concluído${desafio.livro_titulo ? ' com: ' + Util.escapeHTML(desafio.livro_titulo) : ''}`;
     } else {
       btnAbrirConcluir.classList.remove('d-none');
       btnConfirmarConcluir.classList.add('d-none');
+      btnDesfazer.classList.add('d-none');
+      infoConcluido.classList.add('d-none');
     }
 
     const novoBtnAbrir = btnAbrirConcluir.cloneNode(true);
@@ -274,6 +291,10 @@ const Bingo = (() => {
     const novoBtnConfirmar = btnConfirmarConcluir.cloneNode(true);
     btnConfirmarConcluir.replaceWith(novoBtnConfirmar);
     novoBtnConfirmar.addEventListener('click', () => concluirDesafio(desafio, tema, inputLivro.value.trim()));
+
+    const novoBtnDesfazer = btnDesfazer.cloneNode(true);
+    btnDesfazer.replaceWith(novoBtnDesfazer);
+    novoBtnDesfazer.addEventListener('click', () => desfazerConclusao(desafio, tema));
 
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-bingo-resultado'));
     modal.show();
@@ -299,6 +320,24 @@ const Bingo = (() => {
       renderTemas();
     } catch (e) {
       Util.toast('Erro ao concluir: ' + e.message, 'danger');
+    }
+  }
+
+  async function desfazerConclusao(desafio, tema) {
+    try {
+      const resp = await API.enviar({ acao: 'bingoDesfazerConclusao', id: desafio.id });
+      if (!resp || resp.erro) { Util.toast('Não foi possível desfazer: ' + (resp && resp.erro), 'danger'); return; }
+      const lista = desafiosPorTema[tema.id] || [];
+      const idx = lista.findIndex(d => d.id === desafio.id);
+      if (idx >= 0) lista[idx] = resp.desafio;
+      Util.toast('Conclusão desfeita.', 'success');
+      const modalEl = document.getElementById('modal-bingo-resultado');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+      renderResumo();
+      renderTemas();
+    } catch (e) {
+      Util.toast('Erro ao desfazer: ' + e.message, 'danger');
     }
   }
 
