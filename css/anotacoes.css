@@ -182,3 +182,13 @@
     width: 100%;
   }
 }
+
+/* Destaque temporário ao chegar vindo da Jornada de leitura */
+.anotacao-destacada {
+  animation: anotacao-pulso 2.5s ease;
+}
+@keyframes anotacao-pulso {
+  0%, 100% { box-shadow: none; }
+  15%, 60% { box-shadow: 0 0 0 3px var(--primary); }
+}
+

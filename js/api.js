@@ -254,6 +254,14 @@ const API = (() => {
     if (existente && existente.livro_id) await _recalcularProgressoLivro(existente.livro_id);
     return { status: 'ok' };
   }
+  // Busca uma única sessão pelo id — usada pela Jornada de leitura pra abrir
+  // os detalhes de uma sessão específica sem precisar trazer todas as
+  // sessões do app (evita um full scan só pra achar uma).
+  async function obterSessaoPorId(id) {
+    const { data, error } = await sb.from('sessoes').select('*').eq('id', id).single();
+    if (error) throw new Error(error.message);
+    return mapSessaoFull(data);
+  }
   async function listarTodasSessoes() {
     const { data, error } = await sb.from('sessoes').select('*').order('data', { ascending: false });
     if (error) throw new Error(error.message);
@@ -1032,12 +1040,39 @@ const API = (() => {
   }
 
   // ========== TIMELINE / CALENDÁRIO / LOCAIS ==========
-  async function _construirTimelineCompleta() {
+  // Cache curto (60s) do array de eventos já montado — pra rolagem de
+  // páginas na Jornada não remontar tudo do zero a cada scroll. É limpo
+  // automaticamente sempre que qualquer ação de escrita roda (mesmo
+  // mecanismo que já limpa o `cache` geral logo abaixo, em enviar()).
+  const _timelineEventosCache = new Map();
+  const TIMELINE_CACHE_TTL_MS = 60000;
+
+  function _formatarMinutos(min) {
+    min = Math.round(Number(min) || 0);
+    if (min <= 0) return '';
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`;
+  }
+
+  async function _construirTimelineCompleta(livroID) {
+    livroID = livroID || null;
+    const chaveTL = livroID || '__geral__';
+    const cacheado = _timelineEventosCache.get(chaveTL);
+    if (cacheado && (Date.now() - cacheado.timestamp) < TIMELINE_CACHE_TTL_MS) return cacheado.eventos;
+
     const eventos = [];
-    const sessData = await todos('sessoes', 'data,hora_inicio,hora_fim,livro_id');
+
+    // Sessões: filtra direto no banco por livro quando for a Jornada de um
+    // livro só, em vez de trazer as sessões de todos os livros à toa.
+    let querySess = sb.from('sessoes').select('id,data,hora_inicio,hora_fim,livro_id,paginas_lidas,tempo,local');
+    if (livroID) querySess = querySess.eq('livro_id', livroID);
+    const { data: sessData, error: eSess } = await querySess;
+    if (eSess) throw new Error(eSess.message);
+
     const ultimaSessaoPorLivro = {};
     const primeiraSessaoPorLivro = {};
-    sessData.forEach((s) => {
+    (sessData || []).forEach((s) => {
       if (!s.data) return;
       const dSess = parseDataLocal(s.data);
       if (isNaN(dSess.getTime())) return;
@@ -1045,15 +1080,31 @@ const API = (() => {
       if (minutosInicioSess > 0) dSess.setHours(Math.floor(minutosInicioSess / 60), minutosInicioSess % 60, 0, 0);
       const livroIDSess = s.livro_id || '';
       if (!livroIDSess) return;
+
       const atual = ultimaSessaoPorLivro[livroIDSess];
       if (!atual || dSess.getTime() > atual.timestamp) ultimaSessaoPorLivro[livroIDSess] = { timestamp: dSess.getTime(), minutosFim: _paraMinutosDoDia(s.hora_fim) };
       const primeira = primeiraSessaoPorLivro[livroIDSess];
       if (!primeira || dSess.getTime() < primeira.timestamp) primeiraSessaoPorLivro[livroIDSess] = { timestamp: dSess.getTime() };
+
+      // Evento individual da sessão (páginas lidas, tempo, local) — cada
+      // sessão de leitura vira um ponto na jornada, não só a 1ª/última.
+      const paginasLidasSess = Number(s.paginas_lidas) || 0;
+      const tempoMinSess = Number(s.tempo) || 0;
+      let detalheSess = paginasLidasSess > 0
+        ? `${paginasLidasSess} página${paginasLidasSess === 1 ? '' : 's'} lida${paginasLidasSess === 1 ? '' : 's'}`
+        : 'Sessão de leitura';
+      const tempoFormatado = _formatarMinutos(tempoMinSess);
+      if (tempoFormatado) detalheSess += ` · ${tempoFormatado}`;
+      if (s.local) detalheSess += ` · ${s.local}`;
+      eventos.push({ tipo: 'sessao-leitura', data: dSess.toISOString(), livroID: livroIDSess, id: s.id, detalhe: detalheSess, icone: 'fas fa-book-reader', titulo: null, urlCapa: null });
     });
 
     const livrosMap = {};
-    const livrosData = await todos('livros', 'id,titulo,autor,url_capa,imagem_capa,data_cadastro,data_inicio,status,data_termino');
-    livrosData.forEach((l) => {
+    let queryLivros = sb.from('livros').select('id,titulo,autor,url_capa,imagem_capa,data_cadastro,data_inicio,status,data_termino');
+    if (livroID) queryLivros = queryLivros.eq('id', livroID);
+    const { data: livrosData, error: eLivros } = await queryLivros;
+    if (eLivros) throw new Error(eLivros.message);
+    (livrosData || []).forEach((l) => {
       const titulo = l.titulo || 'Sem título';
       const autor = l.autor || '';
       const urlCapa = l.url_capa || l.imagem_capa || '';
@@ -1066,42 +1117,68 @@ const API = (() => {
       const primeiraSessao = primeiraSessaoPorLivro[l.id];
       let dInicio = primeiraSessao ? new Date(primeiraSessao.timestamp) : (l.data_inicio ? parseDataLocal(l.data_inicio) : null);
       if (dInicio && !isNaN(dInicio.getTime())) eventos.push({ tipo: 'livro-comecou', data: dInicio.toISOString(), titulo, detalhe: 'Começou a ler' + (autor ? ' — ' + autor : ''), icone: 'fas fa-book-open', livroID: l.id, urlCapa });
-      if (l.status === 'Finalizado') {
+
+      if (l.status === 'Finalizado' || l.status === 'Abandonado') {
         let dFinal = l.data_termino ? parseDataLocal(l.data_termino) : null;
         const ultimaSessao = ultimaSessaoPorLivro[l.id];
         if (ultimaSessao) {
           dFinal = new Date(ultimaSessao.timestamp);
           if (ultimaSessao.minutosFim > 0) dFinal.setHours(Math.floor(ultimaSessao.minutosFim / 60), ultimaSessao.minutosFim % 60, 0, 0);
         }
-        if (dFinal && !isNaN(dFinal.getTime())) eventos.push({ tipo: 'livro-finalizado', data: dFinal.toISOString(), titulo, detalhe: 'Livro finalizado' + (autor ? ' — ' + autor : ''), icone: 'fas fa-flag-checkered', livroID: l.id, urlCapa });
+        if (dFinal && !isNaN(dFinal.getTime())) {
+          if (l.status === 'Finalizado') {
+            eventos.push({ tipo: 'livro-finalizado', data: dFinal.toISOString(), titulo, detalhe: 'Livro finalizado' + (autor ? ' — ' + autor : ''), icone: 'fas fa-flag-checkered', livroID: l.id, urlCapa });
+          } else {
+            eventos.push({ tipo: 'livro-abandonado', data: dFinal.toISOString(), titulo, detalhe: 'Livro abandonado' + (autor ? ' — ' + autor : ''), icone: 'fas fa-pause-circle', livroID: l.id, urlCapa });
+          }
+        }
       }
     });
 
-    const anotData = await todos('anotacoes', 'data,livro_id,resumo,trecho,categoria');
-    anotData.forEach((a) => {
+    // As sessões foram montadas antes do livrosMap ficar pronto — completa
+    // título/capa delas agora.
+    eventos.forEach((ev) => {
+      if (ev.tipo === 'sessao-leitura') {
+        const info = livrosMap[ev.livroID] || { titulo: 'Livro removido', urlCapa: '' };
+        ev.titulo = info.titulo;
+        ev.urlCapa = info.urlCapa;
+      }
+    });
+
+    let queryAnot = sb.from('anotacoes').select('id,data,livro_id,resumo,trecho,categoria');
+    if (livroID) queryAnot = queryAnot.eq('livro_id', livroID);
+    const { data: anotData, error: eAnot } = await queryAnot;
+    if (eAnot) throw new Error(eAnot.message);
+    (anotData || []).forEach((a) => {
       if (!a.data) return;
       const dAnot = new Date(a.data);
       if (isNaN(dAnot.getTime())) return;
       const infoLivroAnot = livrosMap[a.livro_id] || { titulo: 'Livro removido', urlCapa: '' };
       let textoAnot = (a.resumo || a.trecho || '').toString();
       if (textoAnot.length > 120) textoAnot = textoAnot.slice(0, 117) + '...';
-      eventos.push({ tipo: 'anotacao', data: dAnot.toISOString(), titulo: infoLivroAnot.titulo, detalhe: (a.categoria || 'Anotação') + (textoAnot ? ': ' + textoAnot : ''), icone: 'fas fa-sticky-note', livroID: a.livro_id, urlCapa: infoLivroAnot.urlCapa });
+      eventos.push({ tipo: 'anotacao', data: dAnot.toISOString(), titulo: infoLivroAnot.titulo, detalhe: (a.categoria || 'Anotação') + (textoAnot ? ': ' + textoAnot : ''), icone: 'fas fa-sticky-note', livroID: a.livro_id, id: a.id, urlCapa: infoLivroAnot.urlCapa });
     });
 
-    const conqData = await todos('conquistas', 'nome,descricao,data_conquistada');
-    conqData.forEach((c) => {
-      if (!c.data_conquistada) return;
-      const dConq = new Date(c.data_conquistada);
-      if (isNaN(dConq.getTime())) return;
-      eventos.push({ tipo: 'conquista', data: dConq.toISOString(), titulo: c.nome || 'Conquista', detalhe: c.descricao || '', icone: 'fas fa-trophy', livroID: null, urlCapa: '' });
-    });
+    // Conquistas não têm vínculo com livro no banco (tabela `conquistas` não
+    // tem livro_id) — por isso só entram na Jornada geral, nunca na de um
+    // livro específico.
+    if (!livroID) {
+      const conqData = await todos('conquistas', 'nome,descricao,data_conquistada');
+      conqData.forEach((c) => {
+        if (!c.data_conquistada) return;
+        const dConq = new Date(c.data_conquistada);
+        if (isNaN(dConq.getTime())) return;
+        eventos.push({ tipo: 'conquista', data: dConq.toISOString(), titulo: c.nome || 'Conquista', detalhe: c.descricao || '', icone: 'fas fa-trophy', livroID: null, urlCapa: '' });
+      });
+    }
 
     eventos.sort((a, b) => new Date(b.data) - new Date(a.data));
+    _timelineEventosCache.set(chaveTL, { timestamp: Date.now(), eventos });
     return eventos;
   }
-  async function obterTimelineAtividades(antesDe, limite) {
+  async function obterTimelineAtividades(antesDe, limite, livroID) {
     limite = Number(limite) || 20;
-    const todosEventos = await _construirTimelineCompleta();
+    const todosEventos = await _construirTimelineCompleta(livroID || null);
     const cursor = antesDe ? new Date(antesDe) : null;
     const filtrados = (cursor && !isNaN(cursor.getTime())) ? todosEventos.filter((ev) => new Date(ev.data) < cursor) : todosEventos;
     return { itens: filtrados.slice(0, limite), temMais: filtrados.length > limite };
@@ -1406,6 +1483,7 @@ const API = (() => {
       case 'importBackup': return importarBackup(dados.backup);
       case 'listAllSessions': return listarTodasSessoes();
       case 'listRecentSessions': return listarSessoesRecentes();
+      case 'getSession': return obterSessaoPorId(dados.id);
       case 'updateBook': return atualizarLivro(dados.id, dados.book);
       case 'deleteBook': return excluirLivro(dados.id);
       case 'updateSession': return atualizarSessao(dados.id, dados.sessao);
@@ -1419,7 +1497,7 @@ const API = (() => {
       case 'heatmapRecente': return obterHeatmapRecente(dados.dias);
       case 'heatmapAno': return obterHeatmapAno(dados.ano);
       case 'insightsAvancados': return obterInsightsAvancados();
-      case 'timelineAtividades': return obterTimelineAtividades(dados.antesDe, dados.limite);
+      case 'timelineAtividades': return obterTimelineAtividades(dados.antesDe, dados.limite, dados.livroID);
       case 'buscarPalavra': return buscarPalavra(dados.palavra);
       case 'bingoEstado': return bingoObterEstado();
       case 'bingoSortear': return bingoSortear(dados.tema, dados.textos);
@@ -1460,7 +1538,7 @@ const API = (() => {
       cache.set(chave, { timestamp: Date.now(), promise });
       promise.catch(() => cache.delete(chave));
     } else {
-      promise.then(() => cache.clear()).catch(() => {});
+      promise.then(() => { cache.clear(); _timelineEventosCache.clear(); }).catch(() => {});
     }
     return promise;
   }

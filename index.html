@@ -44,6 +44,7 @@
   <link rel="stylesheet" href="css/configuracoes.css">
   <link rel="stylesheet" href="css/retrospectiva.css">
   <link rel="stylesheet" href="css/bingo.css">
+  <link rel="stylesheet" href="css/jornada.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/dark-mode.css">
   <link rel="preload" as="image" href="img/fundo-splash.png">
@@ -94,6 +95,7 @@
         <a href="#" class="nav-link" data-page="adicionar"><i class="fas fa-plus-circle me-2"></i> Adicionar</a>
         <a href="#" class="nav-link" data-page="metas"><i class="fas fa-bullseye me-2"></i> Metas</a>
         <a href="#" class="nav-link" data-page="bingo"><i class="fas fa-dice me-2"></i> Bingo Literário</a>
+        <a href="#" class="nav-link" data-page="jornada"><i class="fas fa-compass me-2"></i> Jornada de leitura</a>
         <a href="#" class="nav-link" data-page="anotacoes"><i class="fas fa-sticky-note me-2"></i> Anotações</a>
         <a href="#" class="nav-link" data-page="exportar"><i class="fas fa-download me-2"></i> Exportar</a>
         <a href="#" class="nav-link" data-page="configuracoes"><i class="fas fa-cog me-2"></i> Configurações</a>
@@ -139,6 +141,7 @@
       <a href="#" class="nav-link sidebar-icon" data-page="estatisticas" title="Estatísticas"><i class="fas fa-chart-pie"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="metas" title="Metas"><i class="fas fa-bullseye"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="bingo" title="Bingo Literário"><i class="fas fa-dice"></i></a>
+      <a href="#" class="nav-link sidebar-icon" data-page="jornada" title="Jornada de leitura"><i class="fas fa-compass"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="anotacoes" title="Anotações"><i class="fas fa-sticky-note"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="desejos" title="Desejos"><i class="fas fa-heart"></i></a>
       <a href="#" class="nav-link sidebar-icon" data-page="exportar" title="Exportar"><i class="fas fa-download"></i></a>
@@ -285,8 +288,11 @@
              buscando páginas antigas sob demanda no Apps Script (js/timeline.js) -->
         <div class="card mt-3 shadow-sm">
           <div class="card-body">
-            <h5>Atividades</h5>
-            <div id="timeline-container">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Atividades</h5>
+              <a href="#" class="small nav-link p-0" data-page="jornada"><i class="fas fa-compass me-1"></i>Ver jornada completa</a>
+            </div>
+            <div id="timeline-container" class="mt-2">
               <div class="text-muted small" id="timeline-vazio">Nenhuma atividade registrada ainda.</div>
             </div>
             <div id="timeline-sentinela" class="text-center py-2 d-none">
@@ -1205,6 +1211,52 @@
       </div>
     </div>
 
+    <div id="page-jornada" class="page">
+      <div class="container py-4">
+        <h1 class="mb-1"><i class="fas fa-compass me-2"></i>Jornada de leitura</h1>
+        <p class="text-muted mb-3">O caminho da sua leitura ao longo do tempo — sessões, anotações, livros e conquistas, tudo num só lugar.</p>
+
+        <div id="jornada-grafico-mensal-container">
+          <h6 class="mb-2" id="jornada-grafico-titulo">Sua jornada</h6>
+          <div style="height: 180px;">
+            <canvas id="jornada-grafico-mensal"></canvas>
+          </div>
+        </div>
+
+        <div class="jornada-filtros">
+          <select class="form-select form-select-sm" id="jornada-filtro-tipo" aria-label="Filtrar por tipo de evento">
+            <option value="todos">Todos</option>
+            <option value="leituras">Leituras</option>
+            <option value="anotacoes">Anotações</option>
+            <option value="conquistas">Conquistas</option>
+            <option value="metas">Metas</option>
+          </select>
+          <select class="form-select form-select-sm" id="jornada-filtro-periodo" aria-label="Filtrar por período">
+            <option value="ultimos30">Últimos 30 dias</option>
+            <option value="ano" selected>Este ano</option>
+            <option value="anoAnterior">Ano anterior</option>
+            <option value="todos">Todos</option>
+            <option value="personalizado">Período personalizado</option>
+          </select>
+          <select class="form-select form-select-sm" id="jornada-ano-select" aria-label="Escolher ano"></select>
+          <div id="jornada-periodo-personalizado" class="d-none">
+            <input type="date" class="form-control form-control-sm" id="jornada-periodo-inicio" aria-label="Data inicial">
+            <span class="text-muted small">até</span>
+            <input type="date" class="form-control form-control-sm" id="jornada-periodo-fim" aria-label="Data final">
+          </div>
+        </div>
+
+        <div class="jornada-timeline" id="jornada-geral-container"></div>
+        <div class="jornada-vazio d-none" id="jornada-geral-vazio">Nenhuma atividade encontrada para esse filtro.</div>
+        <div id="jornada-geral-sentinela" class="text-center py-2 d-none">
+          <div class="spinner-border spinner-border-sm text-secondary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+        <div class="jornada-fim d-none" id="jornada-geral-fim">Fim da jornada.</div>
+      </div>
+    </div>
+
     <div id="page-anotacoes" class="page">
       <div class="container py-4 d-flex flex-column" style="height: 100%;">
         <h1 class="mb-4">Anotações</h1>
@@ -1924,6 +1976,7 @@
   <script src="js/mapa.js"></script> 
   <script src="js/metas.js"></script>
   <script src="js/bingo.js"></script>
+  <script src="js/jornada.js"></script>
   <script src="js/anotacoes.js"></script>
   <script src="js/desejos.js"></script>
   <script src="js/exportar.js"></script>

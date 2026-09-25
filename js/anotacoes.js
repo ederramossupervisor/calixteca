@@ -338,6 +338,7 @@ const Anotacoes = (() => {
 
       const div = document.createElement('div');
       div.className = 'anotacao-card d-flex flex-column';
+      div.dataset.id = a.ID;
 
       div.innerHTML = `
         <div class="cabecalho d-flex justify-content-between align-items-center mb-2">
@@ -384,7 +385,21 @@ const Anotacoes = (() => {
     });
   }
 
-  return { init };
+  async function destacarAnotacao(id) {
+    if (!todasAnotacoes.length) {
+      await carregarLivrosCache();
+      await carregarTodasAnotacoes();
+    }
+    requestAnimationFrame(() => {
+      const card = document.querySelector(`.anotacao-card[data-id="${CSS.escape(String(id))}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('anotacao-destacada');
+      setTimeout(() => card.classList.remove('anotacao-destacada'), 2500);
+    });
+  }
+
+  return { init, destacarAnotacao };
 })();
 
 if (document.readyState === 'loading') {

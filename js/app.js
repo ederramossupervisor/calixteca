@@ -160,6 +160,9 @@ function activatePageGlobal(pageName) {
     case 'bingo':
       if (typeof Bingo !== 'undefined' && Bingo.init) Bingo.init();
       break;
+    case 'jornada':
+      if (typeof Jornada !== 'undefined' && Jornada.init) Jornada.init();
+      break;
     case 'anotacoes':
       if (typeof Anotacoes !== 'undefined' && Anotacoes.init) Anotacoes.init();
       break;
@@ -192,6 +195,7 @@ function activatePageGlobal(pageName) {
     estatisticas: 'fa-chart-bar',
     metas: 'fa-bullseye',
     bingo: 'fa-dice',
+    jornada: 'fa-compass',
     anotacoes: 'fa-sticky-note',
     desejos: 'fa-heart',
     exportar: 'fa-download',

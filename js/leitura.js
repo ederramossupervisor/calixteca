@@ -311,6 +311,12 @@ const Leitura = (() => {
       if (!restaurarRascunhoSeExistir()) {
         selecionarLivroPadrao();
       }
+      // Avisa quem estiver esperando a tela ficar pronta (ex.: a Jornada de
+      // leitura, que navega pra cá e só então preenche o formulário de
+      // edição de uma sessão específica — evita a corrida em que essa
+      // segunda ação preenche o formulário e o carregamento normal da
+      // página limpa tudo de novo logo em seguida).
+      window.dispatchEvent(new CustomEvent('leitura:pronto'));
     });
     console.log('✅ Módulo Leitura pronto.');
   }
@@ -1167,6 +1173,26 @@ const Leitura = (() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Chamada pela Jornada de leitura (js/jornada.js), quando o usuário clica
+  // num evento de sessão para ver/editar os detalhes. Diferente de
+  // editarSessao(id, lista), que só procura numa lista já carregada na
+  // tela, essa busca a sessão direto no banco — necessária porque a
+  // Jornada pode apontar pra uma sessão antiga, fora das 20 mais recentes
+  // que essa página normalmente carrega.
+  async function editarSessaoPorId(id) {
+    try {
+      const sessao = await API.enviar({ acao: 'getSession', id });
+      if (!sessao || sessao.erro) {
+        Util.toast('Não foi possível abrir essa sessão.', 'warning');
+        return;
+      }
+      if (!livrosCache.some(l => l.ID === sessao.LivroID)) await carregarLivros();
+      editarSessao(id, [sessao]);
+    } catch (e) {
+      Util.toast('Erro ao abrir sessão: ' + e.message, 'danger');
+    }
+  }
+
   async function excluirSessao(id) {
     if (!navigator.onLine) {
       Util.toast('Você está offline. Conecte-se para excluir sessões.', 'warning');
@@ -1185,7 +1211,7 @@ const Leitura = (() => {
     }
   }
 
-  return { init };
+  return { init, editarSessaoPorId };
 })();
 
 if (document.readyState === 'loading') {

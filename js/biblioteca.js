@@ -228,8 +228,9 @@ const Biblioteca = (() => {
             <tr><td><strong>Cadastro</strong></td><td>${Util.formatDate(livro.DataCadastro)}</td></tr>
           </table>
           ${livro.Observacoes ? `<p><strong>Observações:</strong> ${Util.escapeHTML(livro.Observacoes)}</p>` : ''}
-          <div class="mt-3 d-flex gap-2">
+          <div class="mt-3 d-flex gap-2 flex-wrap">
             <button class="btn btn-outline-primary btn-editar-livro" data-id="${livro.ID}">Editar</button>
+            <button class="btn btn-outline-secondary btn-jornada-livro" data-id="${livro.ID}"><i class="fas fa-timeline me-1"></i>Jornada</button>
             <button class="btn btn-outline-danger btn-excluir-livro" data-id="${livro.ID}">Excluir</button>
           </div>
         </div>
@@ -256,6 +257,13 @@ const Biblioteca = (() => {
       modal.hide();
       if (typeof Livros !== 'undefined' && Livros.editarLivro) {
         Livros.editarLivro(livro);
+      }
+    });
+
+    document.querySelector('.btn-jornada-livro').addEventListener('click', () => {
+      modal.hide();
+      if (typeof Jornada !== 'undefined' && Jornada.abrirJornadaLivro) {
+        Jornada.abrirJornadaLivro(livro.ID, livro.Título);
       }
     });
 
@@ -301,7 +309,7 @@ const Biblioteca = (() => {
     }
   }
 
-  return { init };
+  return { init, abrirDetalhes: abrirModal };
 })();
 
 if (document.readyState === 'loading') {
