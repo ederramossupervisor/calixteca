@@ -1096,7 +1096,7 @@ const API = (() => {
       const tempoFormatado = _formatarMinutos(tempoMinSess);
       if (tempoFormatado) detalheSess += ` · ${tempoFormatado}`;
       if (s.local) detalheSess += ` · ${s.local}`;
-      eventos.push({ tipo: 'sessao-leitura', data: dSess.toISOString(), livroID: livroIDSess, id: s.id, detalhe: detalheSess, icone: 'fas fa-book-reader', titulo: null, urlCapa: null });
+      eventos.push({ tipo: 'sessao-leitura', data: dSess.toISOString(), livroID: livroIDSess, id: s.id, detalhe: detalheSess, icone: 'fas fa-book-reader', titulo: null, urlCapa: null, temHora: minutosInicioSess > 0 });
     });
 
     const livrosMap = {};

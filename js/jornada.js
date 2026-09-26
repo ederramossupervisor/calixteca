@@ -356,6 +356,13 @@ const Jornada = (() => {
       ? `<div class="jornada-livro-relacionado"><i class="fas fa-book me-1" aria-hidden="true"></i>${Util.escapeHTML(ev.titulo)}</div>`
       : '';
 
+    // Só mostra o horário quando ele existe de verdade no banco. Anotações
+    // e datas de livro (cadastro/início/fim) são salvas só como "dia", sem
+    // hora — e sessões sem horário de início preenchido também não têm
+    // como saber a que horas aconteceram. Mostrar "00:00" nesses casos
+    // seria uma hora inventada, não um dado real.
+    const linhaHora = ev.temHora ? `<div class="jornada-hora text-muted">${hora}</div>` : '';
+
     div.innerHTML = `
       <div class="jornada-data-col">
         <span class="jornada-dia">${dia}</span>
@@ -368,7 +375,7 @@ const Jornada = (() => {
         <div class="jornada-tipo-evento">${TITULOS_TIPO[ev.tipo] || 'Atividade'}</div>
         <div class="jornada-detalhe">${Util.escapeHTML(ev.detalhe || '')}</div>
         ${linhaLivro}
-        <div class="jornada-hora text-muted">${hora}</div>
+        ${linhaHora}
       </div>`;
 
     if (clicavel) {
