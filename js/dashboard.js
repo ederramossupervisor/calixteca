@@ -259,7 +259,9 @@ const Dashboard = (() => {
       corpo.appendChild(vazio);
     }
 
-    const hojeIso = new Date().toISOString().slice(0, 10);
+    // Data local (toISOString usa UTC e vira o dia à noite no fuso do Brasil)
+    const agoraLocal = new Date();
+    const hojeIso = `${agoraLocal.getFullYear()}-${String(agoraLocal.getMonth() + 1).padStart(2, '0')}-${String(agoraLocal.getDate()).padStart(2, '0')}`;
 
     for (let dia = 1; dia <= totalDias; dia++) {
       const iso = `${anoHeatmap}-${String(mesHeatmapSelecionado).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
@@ -544,4 +546,3 @@ if (document.readyState === 'loading') {
     Dashboard.init();
   }
 }
-
