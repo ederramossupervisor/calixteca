@@ -88,7 +88,7 @@ const DesejosEmprestimos = (() => {
       const emprestimo = {
         livroID: document.getElementById('emprestimo-livro').value,
         paraQuem: document.getElementById('emprestimo-para').value,
-        dataEmprestimo: document.getElementById('emprestimo-data').value || new Date().toISOString().split('T')[0],
+        dataEmprestimo: document.getElementById('emprestimo-data').value || new Date().toLocaleDateString('en-CA'),
         previsaoDevolucao: document.getElementById('emprestimo-previsao').value
       };
       if (!emprestimo.livroID || !emprestimo.paraQuem) return Util.toast('Preencha os campos obrigatórios', 'warning');
