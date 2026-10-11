@@ -1584,7 +1584,7 @@ const Leitor = (() => {
     }
 
     preencherFormularioSessao({
-      data: agora.toISOString().split('T')[0],
+      data: agora.toLocaleDateString('en-CA'),
       horaInicio: horaInicioSessao || horaFimSessao,
       horaFim: horaFimSessao,
       paginaInicial: paginaInicialCronometro,
