@@ -98,9 +98,12 @@ const Livros = (() => {
     document.getElementById('formato').value = livro.Formato || 'Físico';
     Classificacao.definir(livro.Gênero, livro.Subgênero);
     document.getElementById('status').value = livro.Status || 'Quero ler';
-    // Nota convertida de 0-10 para 0-5
+    // A nota já é guardada em estrelas (0 a 5). Só valores acima de 5 (formato antigo, 0-10)
+    // são convertidos; antes toda nota era dividida por 2, o que reduzia a nota a cada edição.
     const notaOriginal = Number(livro.Nota) || 0;
-    notaSelecionada = Math.min(5, Math.max(0, Math.floor(notaOriginal / 2)));
+    notaSelecionada = notaOriginal > 5
+      ? Math.min(5, Math.round(notaOriginal / 2))
+      : Math.max(0, Math.round(notaOriginal));
     const container = document.getElementById('nota-estrelas-container');
     if (container) atualizarEstrelasVisual(container, notaSelecionada);
     // Preço e Tags removidos
