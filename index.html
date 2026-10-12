@@ -437,41 +437,14 @@
                   <div class="row g-2">
                     <div class="col-md-6">
                       <label for="genero" class="form-label">Gênero</label>
-                      <input type="text" id="genero" class="form-control" list="generos-sugestoes">
-                      <datalist id="generos-sugestoes">
-                        <option value="Romance">
-                        <option value="Conto">
-                        <option value="Novela">
-                        <option value="Crônica">
-                        <option value="Poesia">
-                        <option value="Teatro">
-                        <option value="Ficção Científica">
-                        <option value="Fantasia">
-                        <option value="Terror">
-                        <option value="Mistério">
-                        <option value="Suspense">
-                        <option value="Policial">
-                        <option value="Aventura">
-                        <option value="Drama">
-                        <option value="Humor">
-                        <option value="Romance Romântico">
-                        <option value="Ficção Histórica">
-                        <option value="Infantil">
-                        <option value="Juvenil">
-                        <option value="HQ">
-                        <option value="Mangá">
-                        <option value="Graphic Novel">
-                        <option value="Biografia">
-                        <option value="Autobiografia">
-                        <option value="Memórias">
-                        <option value="Diário">
-                        <option value="Ensaio">
-                        <option value="Não Ficção">
-                      </datalist>
+                      <select id="genero" class="form-select"></select>
+                      <div class="form-text">Que tipo de livro é?</div>
                     </div>
                     <div class="col-md-6">
                       <label for="subgenero" class="form-label">Subgênero</label>
-                      <input type="text" id="subgenero" class="form-control">
+                      <input type="text" id="subgenero" class="form-control" list="subgeneros-sugestoes" placeholder="Ex.: Fantasia" autocomplete="off">
+                      <datalist id="subgeneros-sugestoes"></datalist>
+                      <div class="form-text">De que estilo ou tema?</div>
                     </div>
                   </div>
                   <div class="mb-3 mt-2">
@@ -1963,6 +1936,7 @@
   <!-- Módulos -->
   <script src="js/db.js"></script>
   <script src="js/fila-offline.js"></script>
+  <script src="js/classificacao.js"></script>
   <script src="js/livros.js"></script>
   <script src="js/ocr.js"></script>
   <script src="js/leitura.js"></script>
