@@ -11,11 +11,11 @@ const Classificacao = (() => {
   const TAXONOMIA = {
     'Romance e novela': [
       'Fantasia', 'Ficção científica', 'Distopia', 'Terror', 'Suspense', 'Mistério',
-      'Policial', 'Aventura', 'Histórico', 'Romântico', 'Realista', 'Psicológico',
+      'Policial', 'Aventura', 'Histórico', 'Romântico', 'Realista', 'Realismo mágico', 'Psicológico',
       'Drama', 'Humor e sátira'
     ],
     'Conto e crônica': [
-      'Fantástico', 'Terror', 'Policial', 'Ficção científica', 'Realista',
+      'Fantástico', 'Realismo mágico', 'Terror', 'Policial', 'Ficção científica', 'Realista',
       'Humor', 'Cotidiano', 'Antologia'
     ],
     'Poesia': ['Lírica', 'Épica', 'Poema em prosa', 'Haicai', 'Cordel', 'Antologia'],
