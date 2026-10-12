@@ -161,9 +161,26 @@ const API = (() => {
   async function atualizarLivro(id, novosDados) {
     const row = mapLivroPartial(novosDados);
     row.ultima_atualizacao = new Date().toISOString();
+
+    // Livros antigos (cadastrados antes das sessões) guardam as páginas lidas só em
+    // `paginas_lidas`, com "anos anteriores" e "extra" zerados. Se esta edição NÃO está
+    // mexendo nesses dois campos, o recálculo não pode zerar essas páginas.
+    let preservarPaginasLegadas = true;
+    if ('paginas_anos_anteriores' in row || 'paginas_extra' in row) {
+      const { data: atual } = await sb.from('livros')
+        .select('paginas_anos_anteriores,paginas_extra').eq('id', id).single();
+      if (atual) {
+        const mudouAnos = 'paginas_anos_anteriores' in row
+          && (Number(row.paginas_anos_anteriores) || 0) !== (Number(atual.paginas_anos_anteriores) || 0);
+        const mudouExtra = 'paginas_extra' in row
+          && (Number(row.paginas_extra) || 0) !== (Number(atual.paginas_extra) || 0);
+        preservarPaginasLegadas = !(mudouAnos || mudouExtra);
+      }
+    }
+
     const { error } = await sb.from('livros').update(row).eq('id', id);
     if (error) throw new Error(error.message);
-    await _recalcularProgressoLivro(id);
+    await _recalcularProgressoLivro(id, { preservarPaginasLegadas });
     return { status: 'ok' };
   }
   async function excluirLivro(id) {
@@ -272,7 +289,7 @@ const API = (() => {
     if (error) throw new Error(error.message);
     return (data || []).map(mapSessaoFull);
   }
-  async function _recalcularProgressoLivro(livroID) {
+  async function _recalcularProgressoLivro(livroID, opcoes = {}) {
     const { data: sessoes, error } = await sb.from('sessoes').select('paginas_lidas,data').eq('livro_id', livroID);
     if (error) throw new Error(error.message);
     let totalSessoes = 0; let dataUltimaSessao = null;
@@ -287,8 +304,13 @@ const API = (() => {
 
     const pagAnosAnteriores = Number(livro.paginas_anos_anteriores) || 0;
     const pagExtra = Number(livro.paginas_extra) || 0;
-    const novoTotal = pagAnosAnteriores + pagExtra + totalSessoes;
-    const updates = { paginas_lidas: novoTotal, ultima_atualizacao: new Date().toISOString() };
+    let novoTotal = pagAnosAnteriores + pagExtra + totalSessoes;
+    // Livro antigo, sem sessões e sem "anos anteriores"/"extra": mantém as páginas já gravadas.
+    const paginasGravadas = Number(livro.paginas_lidas) || 0;
+    const livroLegado = novoTotal === 0 && paginasGravadas > 0;
+    if (opcoes.preservarPaginasLegadas && livroLegado) novoTotal = paginasGravadas;
+    const updates = { ultima_atualizacao: new Date().toISOString() };
+    if (!(opcoes.preservarPaginasLegadas && livroLegado)) updates.paginas_lidas = novoTotal;
 
     const totalPag = Number(livro.numero_paginas) || 0;
     const statusAtual = livro.status;
