@@ -223,6 +223,7 @@ const Biblioteca = (() => {
             <tr><td><strong>Início</strong></td><td>${formatarData(livro.DataInício)}</td></tr>
             <tr><td><strong>Término</strong></td><td>${formatarData(livro.DataTérmino)}</td></tr>
             <tr><td><strong>Gênero</strong></td><td>${Util.escapeHTML(livro.Gênero) || '-'}</td></tr>
+            <tr><td><strong>Subgênero</strong></td><td>${Util.escapeHTML(livro.Subgênero) || '-'}</td></tr>
             <tr><td><strong>Tags</strong></td><td>${Util.escapeHTML(livro.Tags) || '-'}</td></tr>
             <tr><td><strong>ISBN</strong></td><td>${Util.escapeHTML(livro.ISBN) || '-'}</td></tr>
             <tr><td><strong>Cadastro</strong></td><td>${Util.formatDate(livro.DataCadastro)}</td></tr>
