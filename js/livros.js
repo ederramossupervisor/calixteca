@@ -14,6 +14,7 @@ const Livros = (() => {
     }
 
     prepararEstrelasFormulario();
+    Classificacao.iniciar();
 
     loadCoverBtn.addEventListener('click', () => {
       const urlConvertida = Util.converterLinkDrive(urlCapa.value);
@@ -95,8 +96,7 @@ const Livros = (() => {
     document.getElementById('nacionalidadeAutor').value = livro.NacionalidadeAutor || '';
     document.getElementById('numeroPaginas').value = livro.NúmeroPáginas || '';
     document.getElementById('formato').value = livro.Formato || 'Físico';
-    document.getElementById('genero').value = livro.Gênero || '';
-    document.getElementById('subgenero').value = livro.Subgênero || '';
+    Classificacao.definir(livro.Gênero, livro.Subgênero);
     document.getElementById('status').value = livro.Status || 'Quero ler';
     // Nota convertida de 0-10 para 0-5
     const notaOriginal = Number(livro.Nota) || 0;
