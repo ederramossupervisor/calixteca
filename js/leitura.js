@@ -95,6 +95,77 @@ const Leitura = (() => {
     return match ? match[1] + ':' + match[2] : '';
   }
 
+  // --- Tempo médio de leitura do livro (atalho p/ quando não deu pra usar o cronômetro) ---
+  // Cria o botão discreto logo abaixo dos campos Hora início/Hora fim.
+  function criarBotaoTempoMedio() {
+    const linhaHoras = horaFim.closest('.row');
+    if (!linhaHoras || document.getElementById('btn-media-tempo')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'text-end mt-1';
+    wrapper.innerHTML = '<button type="button" id="btn-media-tempo" class="btn btn-link btn-sm btn-media-tempo" ' +
+      'title="Preenche a hora fim com o horário atual e a hora início com base no tempo médio de leitura deste livro">' +
+      '<i class="fas fa-hourglass-half"></i> usar tempo médio</button>';
+    linhaHoras.insertAdjacentElement('afterend', wrapper);
+    document.getElementById('btn-media-tempo').addEventListener('click', preencherComTempoMedio);
+  }
+
+  // Busca TODAS as sessões do livro (o cache da tela só tem as 20 mais recentes,
+  // o que distorceria a média). Se estiver offline, usa o que houver em cache local.
+  async function obterSessoesDoLivro(livroID) {
+    let todas = [];
+    try {
+      const resp = await API.enviar({ acao: 'listAllSessions' });
+      if (Array.isArray(resp)) todas = resp;
+    } catch (e) {
+      console.warn('Falha ao buscar sessões, usando cache local:', e);
+      try { todas = await DB.obterSessoes(); } catch (_) { todas = []; }
+      if (!todas || !todas.length) todas = sessoesCache;
+    }
+    return (todas || []).filter(s => s.LivroID === livroID);
+  }
+
+  async function preencherComTempoMedio() {
+    const livroID = livroMap[livroInput.value.trim()];
+    if (!livroID) {
+      Util.toast('Selecione um livro primeiro.', 'warning');
+      return;
+    }
+    if (horaInicio.disabled) {
+      Util.toast('Finalize o cronômetro antes de usar o tempo médio.', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-media-tempo');
+    if (btn) btn.disabled = true;
+    try {
+      const sessoes = await obterSessoesDoLivro(livroID);
+      // Se está editando uma sessão, ela não entra na média ("até então").
+      const tempos = sessoes
+        .filter(s => !editandoSessaoID || s.ID !== editandoSessaoID)
+        .map(s => Number(s.Tempo))
+        .filter(t => t > 0);
+
+      if (!tempos.length) {
+        Util.toast('Este livro ainda não tem sessões com tempo registrado.', 'info');
+        return;
+      }
+
+      const media = Math.max(1, Math.round(tempos.reduce((a, b) => a + b, 0) / tempos.length));
+      const fim = new Date();
+      const inicio = new Date(fim.getTime() - media * 60000); // já trata virada de meia-noite
+
+      horaFim.value = fim.toTimeString().slice(0, 5);
+      horaInicio.value = inicio.toTimeString().slice(0, 5);
+      // Sem tempo de cronômetro: a duração passa a vir da diferença entre as horas
+      if (tempoAtivoInput) tempoAtivoInput.value = '';
+      calcularTempo();
+
+      Util.toast(`Média de ${media} min aplicada (${tempos.length} ${tempos.length === 1 ? 'sessão' : 'sessões'}).`, 'success');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   function init() {
     if (!form) return;
 
@@ -123,6 +194,8 @@ const Leitura = (() => {
       }
       calcularTempo();
     });
+
+    criarBotaoTempoMedio();
 
     livroInput.addEventListener('change', () => {
       const texto = livroInput.value.trim();
