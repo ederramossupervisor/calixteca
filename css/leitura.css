@@ -46,3 +46,17 @@
   border-color: var(--primary);
   color: #fff;
 }
+
+/* Botão discreto "usar tempo médio" (abaixo de Hora início/fim) */
+.btn-media-tempo {
+  font-size: 0.75rem;
+  padding: 0;
+  color: var(--text-secondary, #6c757d);
+  text-decoration: none;
+  opacity: 0.85;
+}
+.btn-media-tempo:hover, .btn-media-tempo:focus {
+  color: var(--primary);
+  text-decoration: underline;
+  opacity: 1;
+}
