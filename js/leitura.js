@@ -95,7 +95,7 @@ const Leitura = (() => {
     return match ? match[1] + ':' + match[2] : '';
   }
 
-  // --- Tempo médio de leitura do livro (atalho p/ quando não deu pra usar o cronômetro) ---
+  // --- Ritmo médio de leitura do livro (atalho p/ quando não deu pra usar o cronômetro) ---
   // Cria o botão discreto logo abaixo dos campos Hora início/Hora fim.
   function criarBotaoTempoMedio() {
     const linhaHoras = horaFim.closest('.row');
@@ -103,7 +103,7 @@ const Leitura = (() => {
     const wrapper = document.createElement('div');
     wrapper.className = 'text-end mt-1';
     wrapper.innerHTML = '<button type="button" id="btn-media-tempo" class="btn btn-link btn-sm btn-media-tempo" ' +
-      'title="Preenche a hora fim com o horário atual e a hora início com base no tempo médio de leitura deste livro">' +
+      'title="Preenche a hora fim com o horário atual e a hora início estimada pelo ritmo médio (páginas/hora) deste livro. Informe as páginas antes.">' +
       '<i class="fas fa-hourglass-half"></i> usar tempo médio</button>';
     linhaHoras.insertAdjacentElement('afterend', wrapper);
     document.getElementById('btn-media-tempo').addEventListener('click', preencherComTempoMedio);
@@ -124,10 +124,30 @@ const Leitura = (() => {
     return (todas || []).filter(s => s.LivroID === livroID);
   }
 
+  // Páginas lidas num intervalo — mesma regra de calcularPaginas(): quando não
+  // começa na página 0, a página inicial também conta como lida.
+  function contarPaginas(pi, pf) {
+    if (!(pf > pi)) return 0;
+    let lidas = pf - pi;
+    if (pi > 0) lidas += 1;
+    return lidas;
+  }
+
+  // Preenche hora fim/início estimando quanto tempo as páginas desta sessão
+  // levariam, com base no ritmo médio (páginas por hora) do livro até agora.
   async function preencherComTempoMedio() {
     const livroID = livroMap[livroInput.value.trim()];
     if (!livroID) {
       Util.toast('Selecione um livro primeiro.', 'warning');
+      return;
+    }
+    if (pagInicial.value === '' || pagFinal.value === '') {
+      Util.toast('Informe a página inicial e a página final antes de usar o tempo médio.', 'warning');
+      return;
+    }
+    const paginasSessao = contarPaginas(parseInt(pagInicial.value, 10), parseInt(pagFinal.value, 10));
+    if (paginasSessao <= 0) {
+      Util.toast('A página final precisa ser maior que a inicial.', 'warning');
       return;
     }
     if (horaInicio.disabled) {
@@ -139,20 +159,37 @@ const Leitura = (() => {
     if (btn) btn.disabled = true;
     try {
       const sessoes = await obterSessoesDoLivro(livroID);
-      // Se está editando uma sessão, ela não entra na média ("até então").
-      const tempos = sessoes
-        .filter(s => !editandoSessaoID || s.ID !== editandoSessaoID)
-        .map(s => Number(s.Tempo))
-        .filter(t => t > 0);
 
-      if (!tempos.length) {
-        Util.toast('Este livro ainda não tem sessões com tempo registrado.', 'info');
+      // Ritmo médio ponderado: total de páginas ÷ total de tempo das sessões
+      // do livro (sessões longas pesam mais que as curtas). A sessão que está
+      // sendo editada não entra ("até então").
+      let totalPaginas = 0;
+      let totalMinutos = 0;
+      let qtdSessoes = 0;
+      sessoes
+        .filter(sess => !editandoSessaoID || sess.ID !== editandoSessaoID)
+        .forEach(sess => {
+          const tempo = Number(sess.Tempo);
+          let paginas = Number(sess.PáginasLidas);
+          if (!(paginas > 0)) {
+            paginas = contarPaginas(Number(sess.PáginaInicial) || 0, Number(sess.PáginaFinal) || 0);
+          }
+          if (tempo > 0 && paginas > 0) {
+            totalMinutos += tempo;
+            totalPaginas += paginas;
+            qtdSessoes++;
+          }
+        });
+
+      if (!qtdSessoes) {
+        Util.toast('Este livro ainda não tem sessões com páginas e tempo registrados para calcular o ritmo.', 'info');
         return;
       }
 
-      const media = Math.max(1, Math.round(tempos.reduce((a, b) => a + b, 0) / tempos.length));
+      const paginasPorHora = totalPaginas / (totalMinutos / 60);
+      const minutos = Math.max(1, Math.round(paginasSessao * totalMinutos / totalPaginas));
       const fim = new Date();
-      const inicio = new Date(fim.getTime() - media * 60000); // já trata virada de meia-noite
+      const inicio = new Date(fim.getTime() - minutos * 60000); // já trata virada de meia-noite
 
       horaFim.value = fim.toTimeString().slice(0, 5);
       horaInicio.value = inicio.toTimeString().slice(0, 5);
@@ -160,7 +197,7 @@ const Leitura = (() => {
       if (tempoAtivoInput) tempoAtivoInput.value = '';
       calcularTempo();
 
-      Util.toast(`Média de ${media} min aplicada (${tempos.length} ${tempos.length === 1 ? 'sessão' : 'sessões'}).`, 'success');
+      Util.toast(`Ritmo médio de ${Math.round(paginasPorHora)} pág/h: ${paginasSessao} págs ≈ ${minutos} min.`, 'success');
     } finally {
       if (btn) btn.disabled = false;
     }
